@@ -315,6 +315,49 @@ void AnalysisDUT::initialize() {
                                     30,
                                     -0.5,
                                     29.5);
+    residualsXvsXhit = new TH2F("residualsXvsXhit",
+                                "Residual in X;x_{track}-x_{hit}  [#mum];x_{hit}  [mm];# entries",
+                                4000,
+                                -500.5,
+                                499.5,
+                                40,
+                                -20,
+                                20);
+    residualsXvsYhit = new TH2F("residualsXvsYhit",
+                                "Residual in X;x_{track}-x_{hit}  [#mum];y_{hit}  [mm];# entries",
+                                4000,
+                                -500.5,
+                                499.5,
+                                40,
+                                -20,
+                                20);
+    residualsYvsXhit = new TH2F("residualsYvsXhit",
+                                "Residual in Y;y_{track}-y_{hit}  [#mum];x_{hit}  [mm];# entries",
+                                4000,
+                                -500.5,
+                                499.5,
+                                40,
+                                -20,
+                                20);
+    residualsYvsYhit = new TH2F("residualsYvsYhit",
+                                "Residual in Y;y_{track}-y_{hit}  [#mum];y_{hit}  [mm];# entries",
+                                4000,
+                                -500.5,
+                                499.5,
+                                40,
+                                -20,
+                                20);
+    residualsXvsresidualsY =
+        new TH2F("residualsXvsresidualsY",
+                 "Residual in X vs Residual in Y;x_{track}-x_{hit}  [#mum];y_{track}-y_{hit}  [#mum];# entries",
+                 4000,
+                 -500.5,
+                 499.5,
+                 4000,
+                 -500.5,
+                 499.5);
+    residualsXprofile = new TProfile2D("residualsXprofile", "Residual in X;Row;Column;", (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().X(), (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().Y(), "s");
+    residualsYprofile = new TProfile2D("residualsYprofile", "Residual in Y;Row;Column;", (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().X(), (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().Y(), "s");   
 
     // In-pixel studies:
     auto pitch_x = m_detector->getPitch().X() * 1000.; // convert mm -> um
@@ -902,8 +945,10 @@ StatusCode AnalysisDUT::run(const std::shared_ptr<Clipboard>& clipboard) {
             ROOT::Math::XYZPoint global_lintercept = m_detector->getIntercept(track.get());
             double global_x_distance = global_lintercept.X() - assoc_cluster->global().x();
             double global_y_distance = global_lintercept.Y() - assoc_cluster->global().y();
+            double global_z_distance = global_lintercept.Z() - assoc_cluster->global().z();
             double global_x_distance_um = global_x_distance * 1000.;
             double global_y_distance_um = global_y_distance * 1000.;
+            double global_z_distance_um = global_z_distance * 1000.;
             double global_x_absdistance = fabs(global_x_distance);
             double global_y_absdistance = fabs(global_y_distance);
             double global_pos_diff =
@@ -912,6 +957,14 @@ StatusCode AnalysisDUT::run(const std::shared_ptr<Clipboard>& clipboard) {
 
             residualsX_global->Fill(global_x_distance_um);
             residualsY_global->Fill(global_y_distance_um);
+            residualsZ_global->Fill(global_z_distance_um);
+            residualsXvsXhit->Fill(global_x_distance_um, assoc_cluster->global().x());
+            residualsXvsYhit->Fill(global_x_distance_um, assoc_cluster->global().y());
+            residualsYvsXhit->Fill(global_y_distance_um, assoc_cluster->global().x());
+            residualsYvsYhit->Fill(global_y_distance_um, assoc_cluster->global().y());
+            residualsXvsresidualsY->Fill(global_x_distance_um, global_y_distance_um);
+            residualsXprofile->Fill(assoc_cluster->column(), assoc_cluster->row(), global_x_distance_um);
+            residualsYprofile->Fill(assoc_cluster->column(), assoc_cluster->row(), global_y_distance_um);
             residualsPos_global->Fill(global_pos_diff_um);
             residualsPosVsresidualsTime_global->Fill(time_distance, global_pos_diff_um);
 
@@ -1042,6 +1095,8 @@ void AnalysisDUT::createGlobalResidualPlots() {
         new TH1F("residualsX", "Residual in global X;x_{track}-x_{hit}  [#mum];# entries", 4000, -500.5, 499.5);
     residualsY_global =
         new TH1F("residualsY", "Residual in global Y;y_{track}-y_{hit}  [#mum];# entries", 4000, -500.5, 499.5);
+    residualsZ_global =
+        new TH1F("residualsZ", "Residual in Z;z_{track}-z_{hit}  [#mum];# entries", 4000, -500.5, 499.5);
     residualsPos_global =
         new TH1F("residualsPos",
                  "Absolute distance between track and hit in global coordinates;|pos_{track}-pos_{hit}|  [#mum];# entries",

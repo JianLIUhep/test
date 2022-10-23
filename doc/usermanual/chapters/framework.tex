@@ -249,3 +249,163 @@ There are several kinds of detectors with different local coordinate system, e.g
 
 For the local Cartesian coordinate system, it is right-handed with the x- and y-axes defining the sensor plane.  The origin of this coordinate system is the center of the lower left pixel in the grid, i.e.\ the pixel with indices (0,0).  This simplifies calculations in the local coordinate system as all positions can either be stated in absolute numbers or in fractions of the pixel pitch.
 
+\subsection{Coordinate system for curved sensors}
+\label{ssec:bentdetectors}
+
+A coordinate system redefinition is needed in order to analyze data from curved sensors. A new ''\texttt{cartesian-bent}`` coordinate system is introduced. The local and global coordinate systems defined in \ref{sec:coordinate_systems} are not affected.
+
+An idealized cylindrical geometry is chosen for transformations involving the new coordinate system. Only one bending direction is allowed at a time.
+
+The bending was implemented for rectangular pixels, with some caveats for bending along rows or columns (see Fig.~\ref{fig:bent_coord_syst}). 
+
+
+\begin{figure}[!htp]
+\centering
+  \includegraphics[width=.81\linewidth]{bending_and_radius_definition.pdf}
+  \caption{Various geometries for sensors bent along the rows or columns. Local bent coordinate system definition (\textcolor{red}{red color}). Bent sensors are depicted with \textbf{black}. Their top side (eg: the part with circuitry for MAPS) is depicted with \textcolor{green}{green}. The convexity/concavity of sensors is defined with respect to the position of their top side (see the parameter \protect\parameter{radius} in Sec.~\ref{sssec:cylindrical_coord_system_params}). \\ Note: a rotation of \SI{180}{\degree} around the $y$-axis (for the sensors bent along rows) or $x$-axis (for sensors bent along the columns) respectively will have the same radius sign. Only the eversion of the sensor will yield a sign change of the radius.}
+\label{fig:bent_coord_syst}
+\end{figure}
+
+
+For the case of a sensor bent along the rows, there is the possibility to add a flat part (eg: where the sensor is bonded to the carrier card $\rightarrow$ locally at that point the sensor is flat) in addition to a bent part. This is represented by a purple line in Fig.~\ref{fig:bent_coord_syst} (top).
+
+
+\subsubsection{Cylindrical and cartesian coordinate transformations}
+\label{sssec:cylindrical_coord_transformations}
+
+Let ($x$, $y$, $z$) be the standard Cartesian coordinates, and ($r$, $\theta$, $z$) the standard cylindrical coordinates, with $\theta$ the azimuthal angle. The coordinate transformations from cylindrical to cartesian (rectangular) and back, respectively:
+
+\begin{alignat*}{2}
+  & \begin{dcases}
+  x = \ R \ \text{cos $\theta$}\\
+  y = \ R \ \text{sin $\theta$} \\
+  z = \ z
+  \end{dcases}
+    & \hspace{5em} & \begin{dcases}
+  \text{sin} \ \theta \ = \cfrac{y}{R}\\
+  R \ = \sqrt{x^2+y^2} \\
+  z = \ z
+  \end{dcases}
+\end{alignat*}
+
+
+
+\subsubsection{Geometry file settings}
+\label{sssec:cylindrical_coord_system_params}
+
+\begin{itemize}
+    \item The \parameter{bent_axis} parameter specifies how the sensor is bent (see Fig.~\ref{fig:bent_coord_syst}). Two options are available: \texttt{row} and \texttt{column}. 
+    \item The \parameter{flat_part} parameter is used for sensors bent along the row direction and specifies if a part of the sensor is flat (and the rest bent). For a sensor bent along the column direction this parameter can be omitted, as it will be set to 0. 
+    \item The \parameter{radius} parameter specifies the bending radius of the sensor. The sign of the radius specifies how the sensor is bent (convex/concave) with respect to its top side (eg: the circuitry part on MAPS): a positive radius is defined for a geometry where the circuitry is decompressed (bent outward), while a negative radius is defined for a sensor with compressed circuitry (bent inward). Examples of the various radius definitions and rotations are given in Fig.~\ref{fig:bent_coord_syst}, Fig.~\ref{fig:rotated_sensors_along_rows}, Fig.~\ref{fig:rotated_sensors_along_col_1} and Fig.~\ref{fig:rotated_sensors_along_col_2}. 
+    
+    Note that rotations do not change the convexity/concavity, therefore the radius stays as defined (positive or negative). Eversion however will change the radius of the sensors.
+    \end{itemize}
+    
+    
+    
+    \begin{figure}[!htp]
+    \centering
+    \begin{subfigure}{.45\textwidth}
+      \centering
+      \includegraphics[width=.95\linewidth]{bent_along_rows_1.png}
+      \caption{}
+      \label{fig:upstream}
+    \end{subfigure}%
+    \begin{subfigure}{.45\textwidth}
+      \centering
+      \includegraphics[width=.95\linewidth]{bent_along_rows_2.png}
+      \caption{}
+      \label{fig:downstream}
+    \end{subfigure}
+    \begin{multicols}{2}
+    \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
+    bent_axis = "row"
+    coordinates = "cartesian-bent"
+    flat_part = 0mm
+    orientation = 0deg,0deg,0deg
+    orientation_mode = "xyz"
+    radius = 18mm
+    \end{minted}
+    \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
+    bent_axis = "row"
+    coordinates = "cartesian-bent"
+    flat_part = 0mm
+    orientation = 0deg,0deg,0deg
+    orientation_mode = "xyz"
+    radius = -18mm
+    \end{minted}
+    \end{multicols}
+    \caption{Sensors bent along rows with opposite radius, \protect\parameter{flat_part = 0} and no rotation with respect to the reference chips.}
+    \label{fig:rotated_sensors_along_rows}
+    \end{figure}
+    
+    
+    
+    \begin{figure}[!htp]
+    \centering
+    \begin{subfigure}{.45\textwidth}
+      \centering
+      \includegraphics[width=.95\linewidth]{bent_along_cols_1.png}
+      \caption{}
+      \label{fig:upstream}
+    \end{subfigure}%
+    \begin{subfigure}{.45\textwidth}
+      \centering
+      \includegraphics[width=.95\linewidth]{bent_along_cols_2.png}
+      \caption{}
+      \label{fig:downstream}
+    \end{subfigure}
+    \begin{multicols}{2}
+    \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
+    bent_axis = "column"
+    coordinates = "cartesian-bent"
+    orientation = 0deg,0deg,90deg
+    orientation_mode = "xyz"
+    radius = -18mm
+    \end{minted}
+    \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
+    bent_axis = "column"
+    coordinates = "cartesian-bent"
+    orientation = 0deg,180deg,90deg
+    orientation_mode = "xyz"
+    radius = -18mm
+    \end{minted}
+    \end{multicols}
+    \caption{Sensors with the same radius, but rotated by \SI{180}{\degree} with respect to one another. The front side of the sensors is denoted by the pads on the matrix. The device under test (middle sensor) in (b) is seen here from the back.}
+    \label{fig:rotated_sensors_along_col_1}
+    \end{figure}
+    
+    
+    \begin{figure}[!htp]
+    \centering
+    \begin{subfigure}{.45\textwidth}
+      \centering
+      \includegraphics[width=.95\linewidth]{bent_along_cols_1.png}
+      \caption{}
+      \label{fig:upstream}
+    \end{subfigure}%
+    \begin{subfigure}{.45\textwidth}
+      \centering
+      \includegraphics[width=.95\linewidth]{bent_along_cols_3.png}
+      \caption{}
+      \label{fig:downstream}
+    \end{subfigure}
+    \begin{multicols}{2}
+    \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
+    bent_axis = "column"
+    coordinates = "cartesian-bent"
+    orientation = 0deg,0deg,90deg
+    orientation_mode = "xyz"
+    radius = -18mm
+    \end{minted}
+    \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
+    bent_axis = "column"
+    coordinates = "cartesian-bent"
+    orientation = 0deg,0deg,90deg
+    orientation_mode = "xyz"
+    radius = 18mm
+    \end{minted}
+    \end{multicols}
+    \caption{Sensors with opposite radii, rotated only with respect to the reference detectors by \SI{90}{\degree} and not with respect to one another.}
+    \label{fig:rotated_sensors_along_col_2}
+    \end{figure}

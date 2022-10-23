@@ -124,6 +124,12 @@ IF(LATEX_COMPILER)
             usermanual/figures/reconstruction-chain-simple.png
             usermanual/figures/reconstruction-chain-complicated.png
             usermanual/figures/onlinemon.png
+            usermanual/figures/bent_along_cols_1.png
+            usermanual/figures/bent_along_cols_2.png
+            usermanual/figures/bent_along_cols_3.png
+            usermanual/figures/bending_and_radius_definition.pdf
+            usermanual/figures/bent_along_rows_1.png
+            usermanual/figures/bent_along_rows_2.png
             INPUTS
             usermanual/chapters/introduction.tex
             usermanual/chapters/installation.tex
