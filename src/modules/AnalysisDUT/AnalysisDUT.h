@@ -93,7 +93,7 @@ namespace corryvreckan {
         TH1F* clusterWidthRowAssoc;
         TH1F* clusterWidthColAssoc;
 
-        TH1F *residualsZ;
+        TH1F* residualsZ_global;
         TH2F *residualsXvsXhit, *residualsXvsYhit;
         TH2F *residualsYvsXhit, *residualsYvsYhit;
         TH2F* residualsXvsresidualsY;

@@ -356,8 +356,24 @@ void AnalysisDUT::initialize() {
                  4000,
                  -500.5,
                  499.5);
-    residualsXprofile = new TProfile2D("residualsXprofile", "Residual in X;Row;Column;", (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().X(), (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().Y(), "s");
-    residualsYprofile = new TProfile2D("residualsYprofile", "Residual in Y;Row;Column;", (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().X(), (m_detector->nPixels().Y())/8, 0, m_detector->nPixels().Y(), "s");   
+    residualsXprofile = new TProfile2D("residualsXprofile",
+                                       "Residual in X;Row;Column;",
+                                       (m_detector->nPixels().Y()) / 8,
+                                       0,
+                                       m_detector->nPixels().X(),
+                                       (m_detector->nPixels().Y()) / 8,
+                                       0,
+                                       m_detector->nPixels().Y(),
+                                       "s");
+    residualsYprofile = new TProfile2D("residualsYprofile",
+                                       "Residual in Y;Row;Column;",
+                                       (m_detector->nPixels().Y()) / 8,
+                                       0,
+                                       m_detector->nPixels().X(),
+                                       (m_detector->nPixels().Y()) / 8,
+                                       0,
+                                       m_detector->nPixels().Y(),
+                                       "s");
 
     // In-pixel studies:
     auto pitch_x = m_detector->getPitch().X() * 1000.; // convert mm -> um
@@ -1095,8 +1111,7 @@ void AnalysisDUT::createGlobalResidualPlots() {
         new TH1F("residualsX", "Residual in global X;x_{track}-x_{hit}  [#mum];# entries", 4000, -500.5, 499.5);
     residualsY_global =
         new TH1F("residualsY", "Residual in global Y;y_{track}-y_{hit}  [#mum];# entries", 4000, -500.5, 499.5);
-    residualsZ_global =
-        new TH1F("residualsZ", "Residual in Z;z_{track}-z_{hit}  [#mum];# entries", 4000, -500.5, 499.5);
+    residualsZ_global = new TH1F("residualsZ", "Residual in Z;z_{track}-z_{hit}  [#mum];# entries", 4000, -500.5, 499.5);
     residualsPos_global =
         new TH1F("residualsPos",
                  "Absolute distance between track and hit in global coordinates;|pos_{track}-pos_{hit}|  [#mum];# entries",

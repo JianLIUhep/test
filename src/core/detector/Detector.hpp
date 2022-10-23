@@ -309,14 +309,14 @@ namespace corryvreckan {
          * @param  local Local coordinates in the reference frame of this detector
          * @return       Global coordinates
          */
-        virtual XYZPoint localToGlobal(const XYZPoint& local) const { return m_localToGlobal * local; };
+        virtual XYZPoint localToGlobal(XYZPoint local) const { return m_localToGlobal * local; };
 
         /**
          * @brief Transform global coordinates into detector-local coordinates
          * @param  global Global coordinates
          * @return        Local coordinates in the reference frame of this detector
          */
-        virtual XYZPoint globalToLocal(const XYZPoint& global) const { return m_globalToLocal * global; };
+        virtual XYZPoint globalToLocal(XYZPoint global) const { return m_globalToLocal * global; };
 
         /**
          * @brief Check whether given track is within the detector's region-of-interest
