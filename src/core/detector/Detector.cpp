@@ -15,6 +15,7 @@
 #include "Math/RotationZ.h"
 #include "Math/RotationZYX.h"
 
+#include "BentPixelDetector.hpp"
 #include "Detector.hpp"
 #include "HexagonalPixelDetector.hpp"
 #include "core/utils/log.h"
@@ -81,10 +82,14 @@ std::shared_ptr<Detector> corryvreckan::Detector::factory(const Configuration& c
     std::transform(coordinates.begin(), coordinates.end(), coordinates.begin(), ::tolower);
     if(coordinates == "cartesian") {
         return std::make_shared<PixelDetector>(config);
+    } else if(coordinates == "cartesian-bent") {
+        return std::make_shared<BentPixelDetector>(config);
     } else if(coordinates == "hexagonal") {
         return std::make_shared<HexagonalPixelDetector>(config);
     } else {
-        throw InvalidValueError(config, "coordinates", "Coordinates can only set to be cartesian now");
+        throw InvalidValueError(config,
+                                "coordinates",
+                                "Coordinates can only be set to \"cartesian\", \"cartesian-bent\" or \"hexagonal\" for now");
     }
 }
 
