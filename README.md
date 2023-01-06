@@ -68,6 +68,7 @@ The following authors, in alphabetical order, have developed or contributed to C
 * Eric Buschmann, CERN, @ebuschma
 * Maximilian Felix Caspar, DESY, @mcaspar
 * Chun Cheng, DESY, @chengc
+* Joshua Clercx, DESY, @jclercx
 * Manuel Colocci, CERN, @mcolocci
 * Dominik Dannheim, CERN, @dannheim
 * Jens Dopke, STFC RAL, @jdopke
@@ -83,6 +84,7 @@ The following authors, in alphabetical order, have developed or contributed to C
 * Nicolò Jacazio, CERN, @njacazio
 * Callan Jessiman, Carleton University, @cjessima
 * Jens Kroeger, University of Heidelberg/CERN, @jekroege
+* Fabian Lex, University of Freiburg, @lex
 * Magnus Mager, CERN, @mmager
 * Keerthi Nakkalil, University Bonn/DESY, @nakkalil
 * Andreas Matthias Nürnberg, KIT, @nurnberg
@@ -91,9 +93,11 @@ The following authors, in alphabetical order, have developed or contributed to C
 * Klaas Padeken, Bonn, HISKP, @padeken
 * Florian Pitters, HEPHY, @fpipper
 * Miljenko Suljic, CERN, @msuljic
+* Peter Svihra, CERN, @psvihra
 * Tomas Vanat, CERN, @tvanat
 * Annika Vauth, University of Hamburg/DESY, @anvauth
 * Mateus Vicente Barreto Pinto, University Geneva, @mvicente
+* Gianpiero Vignola, DESY, @gvignola
 * Morag Williams, University of Glasgow/CERN, @williamm
 * Philipp Windischhofer, University of Chicago, @phwindis
 * Yitao Wu, University of Science and Technology of China, @yitao
