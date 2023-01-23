@@ -139,23 +139,6 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
 }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Track* track) const {
-    // FIXME: only works for straight line tracks
-    if(track->getType() == "GblTrack") {
-        return track->getState(getName());
-    } else {
-        // Get the distance from the plane to the track initial state
-        double distance = (m_origin.X() - track->getState(m_detectorName).X()) * m_normal.X();
-        distance += (m_origin.Y() - track->getState(m_detectorName).Y()) * m_normal.Y();
-        distance += (m_origin.Z() - track->getState(m_detectorName).Z()) * m_normal.Z();
-        distance /= (track->getDirection(m_detectorName).X() * m_normal.X() +
-                     track->getDirection(m_detectorName).Y() * m_normal.Y() +
-                     track->getDirection(m_detectorName).Z() * m_normal.Z());
-
-        // Propagate the track
-        PositionVector3D<Cartesian3D<double>> globalPlanarIntercept(
-            track->getState(m_detectorName).X() + distance * track->getDirection(m_detectorName).X(),
-            track->getState(m_detectorName).Y() + distance * track->getDirection(m_detectorName).Y(),
-            track->getState(m_detectorName).Z() + distance * track->getDirection(m_detectorName).Z());
 
         // Get and transform track state and direction
         PositionVector3D<Cartesian3D<double>> state_track = track->getState(m_detectorName);
@@ -178,10 +161,10 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
 
         } else {
             double row_arc_length =
-                m_radius * asin((this->getSize().Y() / 2 - m_flat_part - globalPlanarIntercept.Y()) / m_radius) +
+                m_radius * asin((this->getSize().Y() / 2 - m_flat_part - state_track.Y()) / m_radius) +
                 m_flat_part;
             if(row_arc_length < m_flat_part) { // flat part
-                return globalPlanarIntercept;
+                return state_track;
             } else { // bent part
                 ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder(
                     0, this->getSize().Y() / 2 - m_flat_part, -m_radius);
@@ -222,7 +205,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
 
         return m_localToGlobal * localBentIntercept;
     }
-}
+
 
 void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesian3D<double>>& state_track,
                                                  const DisplacementVector3D<Cartesian3D<double>>& direction_track,
