@@ -133,7 +133,7 @@ namespace corryvreckan {
 
         // bent geometry configuration parameters
         double m_radius;
-        double m_flat_part;
+        double m_rotate_by;
     };
 } // namespace corryvreckan
 

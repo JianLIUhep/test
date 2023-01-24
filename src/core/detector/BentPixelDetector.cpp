@@ -29,10 +29,9 @@ BentPixelDetector::BentPixelDetector(const Configuration& config) : PixelDetecto
 }
 
 void BentPixelDetector::build_axes(const Configuration& config) {
-
-    m_flat_part = config.get<double>("flat_part", 0); // A bent sensor can be attached to the PCB and have a local flat part
-    m_radius = config.get<double>("radius", 0);       // Radius of the bent sensor
-    m_bent_axis = config.get<BentAxis>("bent_axis");  // Axis along which the detector is bent
+    m_rotate_by = config.get<double>("rotate_by", 0);
+    m_radius = config.get<double>("radius");         // Radius of the bent sensor
+    m_bent_axis = config.get<BentAxis>("bent_axis"); // Axis along which the detector is bent
 
     LOG(DEBUG) << "  Using bent coordinate system for detector '" << m_detectorName << "'.";
     if(m_bent_axis == BentAxis::COLUMN) {
@@ -40,65 +39,42 @@ void BentPixelDetector::build_axes(const Configuration& config) {
     } else {
         LOG(TRACE) << "\": ROW is bent axis, ";
     }
-    if(m_flat_part > 0 && m_bent_axis == BentAxis::COLUMN) {
-        throw InvalidCombinationError(config, {"m_flat_part", "m_bent_axis"}, "Bending along column axis not implemented.");
-    }
     if(m_radius == 0) {
         throw InvalidValueError(config, "m_radius", "A radius bigger than 0 must be given.");
     }
-    LOG(TRACE) << "Bending radius of " << Units::display(m_radius, {{"mm"}}) << ", flat part of "
-               << Units::display(m_flat_part, {{"mm"}});
+    LOG(TRACE) << "Bending radius of " << Units::display(m_radius, {{"mm"}}) << ", rotated by "
+               << Units::display(m_rotate_by, {{"deg"}});
 }
 
 void BentPixelDetector::configure_pos_and_orientation(Configuration& config) const {
     PixelDetector::configure_pos_and_orientation(config);
     config.set("radius", m_radius, {{"mm"}});
-    config.set("flat_part", m_flat_part, {{"mm"}});
+    config.set("m_rotate_by", m_rotate_by, {{"deg"}});
     config.set("bent_axis", m_bent_axis);
 }
 
 XYZPoint BentPixelDetector::localToGlobal(XYZPoint local) const {
-    ROOT::Math::XYVector detector_dimensions = getSize();
+    double locx, locy, locz;
     // Axis of the sensor that is bent
     if(m_bent_axis == BentAxis::COLUMN) {
-        // origin of coordinate system in the middle of the flat chip (tangential point)
-        double col_arc_length = local.X();
-        ROOT::Math::XYZPoint local_transformed(
-            m_radius *
-                sin(col_arc_length / m_radius), // >0 for col_arc_length>0 and vice versa independent of sign(m_radius)
-            local.y(),
-            local.z() - m_radius * (1.0 - cos(col_arc_length / m_radius))); // local.z() + ... for r<0
-        local_transformed = m_localToGlobal * local_transformed;
-        LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z()
-                   << ") to global point (" << local_transformed.x() << "|" << local_transformed.y() << "|"
-                   << local_transformed.z() << "). Bent column";
-        return local_transformed;
-    } else {
-        // origin of coordinate system in the middle of the flat chip
-        double row_arc_length = detector_dimensions.Y() / 2 - local.Y(); // distance from top of the chip
-        if(row_arc_length < m_flat_part) {                               // flat sensor
-            ROOT::Math::XYZPoint local_transformed(local.x(), -row_arc_length + detector_dimensions.Y() / 2, local.z());
-            local_transformed = m_localToGlobal * local_transformed;
-            LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z()
-                       << ") to global point (" << local_transformed.x() << "|" << local_transformed.y() << "|"
-                       << local_transformed.z() << "). Bent row";
-            return local_transformed;
-        } else { // bent sensor
-            ROOT::Math::XYZPoint local_transformed(
-                local.x(),
-                -m_radius * sin((row_arc_length - m_flat_part) / m_radius) - m_flat_part +
-                    detector_dimensions.Y() /
-                        2, // first term with the sin reflects the change in dimensions due to bending; together with the
-                           // second term they describe the distance downward from the sensor edge; the last term translates
-                           // local bent coordinates to local Corryvreckan coordinates
-                m_radius * (cos((row_arc_length - m_flat_part) / m_radius) - 1.0) + local.z());
-            local_transformed = m_localToGlobal * local_transformed;
-            LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z()
-                       << ") to global point (" << local_transformed.x() << "|" << local_transformed.y() << "|"
-                       << local_transformed.z() << "). Bent row";
-            return local_transformed;
+        if(m_rotate_by != 0) {
+            local.SetX(local.x() + static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
         }
+        locx = m_radius * sin(local.x() / m_radius);
+        locy = local.y();
+        locz = local.z() - m_radius * (1.0 - cos(local.x() / m_radius));
+    } else {
+        if(m_rotate_by != 0) {
+            local.SetY(local.y() + static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
+        }
+        locx = local.x();
+        locy = m_radius * sin(local.y() / m_radius);
+        locz = local.z() - m_radius * (1.0 - cos(local.y() / m_radius));
     }
+    ROOT::Math::XYZPoint local_transformed = m_localToGlobal * ROOT::Math::XYZPoint(locx, locy, locz);
+    LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z() << ") to global point ("
+               << local_transformed.x() << "|" << local_transformed.y() << "|" << local_transformed.z() << "). Bent row";
+    return local_transformed;
 }
 
 XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
@@ -113,99 +89,81 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
                                                                // angle from the angle's trigonometric ratios
         ROOT::Math::XYZPoint local(col_arc_length,
                                    local_transformed.y(),
-                                   m_radius * (cos(col_arc_length / m_radius) - 1)); // z is always 0 in local coordinates
+                                   m_radius * (cos(col_arc_length / m_radius) - 1)); // TODO: should z be 0 in local coords?
         LOG(TRACE) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z()
                    << ") to local point (" << local.x() << "|" << local.y() << "|" << local.z() << "). Bent column";
         return local;
     } else {
-        double row_arc_length =
-            m_radius * asin((detector_dimensions.Y() / 2 - m_flat_part - local_transformed.Y()) / m_radius) +
-            m_flat_part; // inverse of the def in localToGlobal
+        double row_arc_length = m_radius * asin((detector_dimensions.Y() / 2 - local_transformed.Y()) /
+                                                m_radius); // inverse of the def in localToGlobal
         // origin of coordinate in the middle of the flat chip
-        if(row_arc_length < m_flat_part) { // flat part
-            ROOT::Math::XYZPoint local(local_transformed.x(), local_transformed.y(), 0);
-            LOG(TRACE) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z()
-                       << ") to local point (" << local.x() << "|" << local.y() << "|" << local.z() << "). Bent row";
-            return local;
-        } else {                                              // bent part
-            ROOT::Math::XYZPoint local(local_transformed.x(), // not modified
-                                       detector_dimensions.Y() / 2 - row_arc_length,
-                                       0);
-            LOG(TRACE) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z()
-                       << ") to local point (" << local.x() << "|" << local.y() << "|" << local.z() << "). Bent row";
-            return local;
-        }
+        ROOT::Math::XYZPoint local(local_transformed.x(), // not modified
+                                   detector_dimensions.Y() / 2 - row_arc_length,
+                                   0);
+        LOG(TRACE) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z()
+                   << ") to local point (" << local.x() << "|" << local.y() << "|" << local.z() << "). Bent row";
+        return local;
     }
 }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Track* track) const {
 
-        // Get and transform track state and direction
-        PositionVector3D<Cartesian3D<double>> state_track = track->getState(m_detectorName);
-        DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
+    // Get and transform track state and direction
+    PositionVector3D<Cartesian3D<double>> state_track = track->getState(m_detectorName);
+    DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
 
-        // Bring track to local (transformed) coordinate system
-        state_track = m_globalToLocal * state_track;
-        direction_track = m_globalToLocal.Rotation() * direction_track;
-        direction_track = direction_track.Unit();
+    // Bring track to local (transformed) coordinate system
+    state_track = m_globalToLocal * state_track;
+    direction_track = m_globalToLocal.Rotation() * direction_track;
+    direction_track = direction_track.Unit();
 
-        // From globalPlanarIntercept get intercept with bent surface of pixel detector
-        InterceptParameters intercept_parameters;
-        if(m_bent_axis == BentAxis::COLUMN) {
-            // Define/initialise detector cylinder in local_transformed coordinates
-            ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder(0, 0, -m_radius);
-            ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder(
-                0, 1, 0); // cylinder axis along y (row)
+    // From globalPlanarIntercept get intercept with bent surface of pixel detector
+    InterceptParameters intercept_parameters;
+    if(m_bent_axis == BentAxis::COLUMN) {
+        // Define/initialise detector cylinder in local_transformed coordinates
+        ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder(0, 0, -m_radius);
+        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder(
+            0, 1, 0); // cylinder axis along y (row)
 
-            get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
+        get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
 
-        } else {
-            double row_arc_length =
-                m_radius * asin((this->getSize().Y() / 2 - m_flat_part - state_track.Y()) / m_radius) +
-                m_flat_part;
-            if(row_arc_length < m_flat_part) { // flat part
-                return state_track;
-            } else { // bent part
-                ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder(
-                    0, this->getSize().Y() / 2 - m_flat_part, -m_radius);
-                ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder(
-                    1, 0, 0); // cylinder axis along x (column)
+    } else {
+        ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder(0, this->getSize().Y() / 2, -m_radius);
+        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder(
+            1, 0, 0); // cylinder axis along x (column)
 
-                get_intercept_parameters(
-                    state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
-            }
-        }
-
-        // Select solution according to bending direction
-        PositionVector3D<Cartesian3D<double>> localBentIntercept;
-        double inf = std::numeric_limits<double>::infinity();
-        if(m_radius < 0) { // for negative radius select smaller solution
-            if(!intercept_parameters.isValid()) {
-                LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
-                localBentIntercept.SetCoordinates(inf, inf, inf);
-                return localBentIntercept;
-            } else {
-                localBentIntercept =
-                    ROOT::Math::XYZPoint(state_track.x() + intercept_parameters.getParam1() * direction_track.x(),
-                                         state_track.y() + intercept_parameters.getParam1() * direction_track.y(),
-                                         state_track.z() + intercept_parameters.getParam1() * direction_track.z());
-            }
-        } else {
-            if(!intercept_parameters.isValid()) {
-                LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
-                localBentIntercept.SetCoordinates(inf, inf, inf);
-                return localBentIntercept;
-            } else {
-                localBentIntercept =
-                    ROOT::Math::XYZPoint(state_track.x() + intercept_parameters.getParam2() * direction_track.x(),
-                                         state_track.y() + intercept_parameters.getParam2() * direction_track.y(),
-                                         state_track.z() + intercept_parameters.getParam2() * direction_track.z());
-            }
-        }
-
-        return m_localToGlobal * localBentIntercept;
+        get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
     }
 
+    // Select solution according to bending direction
+    PositionVector3D<Cartesian3D<double>> localBentIntercept;
+    double inf = std::numeric_limits<double>::infinity();
+    if(m_radius < 0) { // for negative radius select smaller solution
+        if(!intercept_parameters.isValid()) {
+            LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
+            localBentIntercept.SetCoordinates(inf, inf, inf);
+            return localBentIntercept;
+        } else {
+            localBentIntercept =
+                ROOT::Math::XYZPoint(state_track.x() + intercept_parameters.getParam1() * direction_track.x(),
+                                     state_track.y() + intercept_parameters.getParam1() * direction_track.y(),
+                                     state_track.z() + intercept_parameters.getParam1() * direction_track.z());
+        }
+    } else {
+        if(!intercept_parameters.isValid()) {
+            LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
+            localBentIntercept.SetCoordinates(inf, inf, inf);
+            return localBentIntercept;
+        } else {
+            localBentIntercept =
+                ROOT::Math::XYZPoint(state_track.x() + intercept_parameters.getParam2() * direction_track.x(),
+                                     state_track.y() + intercept_parameters.getParam2() * direction_track.y(),
+                                     state_track.z() + intercept_parameters.getParam2() * direction_track.z());
+        }
+    }
+
+    return m_localToGlobal * localBentIntercept;
+}
 
 void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesian3D<double>>& state_track,
                                                  const DisplacementVector3D<Cartesian3D<double>>& direction_track,
