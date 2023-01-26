@@ -139,29 +139,17 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     // Select solution according to bending direction
     PositionVector3D<Cartesian3D<double>> localBentIntercept;
     double inf = std::numeric_limits<double>::infinity();
-    if(m_radius < 0) { // for negative radius select smaller solution
-        if(!intercept_parameters.isValid()) {
-            LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
-            localBentIntercept.SetCoordinates(inf, inf, inf);
-            return localBentIntercept;
-        } else {
-            localBentIntercept =
-                ROOT::Math::XYZPoint(state_track.x() + intercept_parameters.getParam1() * direction_track.x(),
-                                     state_track.y() + intercept_parameters.getParam1() * direction_track.y(),
-                                     state_track.z() + intercept_parameters.getParam1() * direction_track.z());
-        }
-    } else {
-        if(!intercept_parameters.isValid()) {
-            LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
-            localBentIntercept.SetCoordinates(inf, inf, inf);
-            return localBentIntercept;
-        } else {
-            localBentIntercept =
-                ROOT::Math::XYZPoint(state_track.x() + intercept_parameters.getParam2() * direction_track.x(),
-                                     state_track.y() + intercept_parameters.getParam2() * direction_track.y(),
-                                     state_track.z() + intercept_parameters.getParam2() * direction_track.z());
-        }
+
+    if(!intercept_parameters.isValid()) {
+        LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
+        localBentIntercept.SetCoordinates(inf, inf, inf);
+        return localBentIntercept;
     }
+    auto param = (m_radius < 0) ? intercept_parameters.getParam1()
+                                : intercept_parameters.getParam2(); // for negative radius select smaller solution
+    localBentIntercept = ROOT::Math::XYZPoint(state_track.x() + param * direction_track.x(),
+                                              state_track.y() + param * direction_track.y(),
+                                              state_track.z() + param * direction_track.z());
 
     return m_localToGlobal * localBentIntercept;
 }
@@ -175,29 +163,22 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     double alpha;
     double beta;
     double gamma;
-    if(direction_cylinder.X() != 0 && direction_cylinder.Y() == 0 &&
-       direction_cylinder.Z() == 0) { // cylinder along x (column)
-        alpha = (direction_track.Y() * direction_track.Y()) + (direction_track.Z() * direction_track.Z());
-        beta = 2 * (state_track.Y() * direction_track.Y() + state_track.Z() * direction_track.Z() -
-                    direction_track.Y() * state_cylinder.Y() - direction_track.Z() * state_cylinder.Z());
-        gamma =
-            ((state_track.Y() * state_track.Y()) + (state_track.Z() * state_track.Z()) +
-             (state_cylinder.Y() * state_cylinder.Y()) + (state_cylinder.Z() * state_cylinder.Z()) -
-             2 * state_track.Y() * state_cylinder.Y() - 2 * state_track.Z() * state_cylinder.Z() - (m_radius * m_radius));
-    } else if(direction_cylinder.X() == 0 && direction_cylinder.Y() != 0 &&
-              direction_cylinder.Z() == 0) { // cylinder along y (row)
-        alpha = (direction_track.X() * direction_track.X()) + (direction_track.Z() * direction_track.Z());
-        beta = 2 * (state_track.X() * direction_track.X() + state_track.Z() * direction_track.Z() -
-                    direction_track.X() * state_cylinder.X() - direction_track.Z() * state_cylinder.Z());
-        gamma =
-            ((state_track.X() * state_track.X()) + (state_track.Z() * state_track.Z()) +
-             (state_cylinder.X() * state_cylinder.X()) + (state_cylinder.Z() * state_cylinder.Z()) -
-             2 * state_track.X() * state_cylinder.X() - 2 * state_track.Z() * state_cylinder.Z() - (m_radius * m_radius));
-    } else {
-        throw InvalidSettingError(this,
-                                  "direction_cylinder",
-                                  "Unknown cylinder direction! Cylinder can only be bent along 'x' (column) or 'y' (row).");
-    }
+
+    int component =
+        (direction_cylinder.X() != 0 && direction_cylinder.Y() == 0)
+            ? 0
+            : 1; // no other possibilities (see getIntercept's if); cylinder along x (column) : cylinder along y (row)
+    alpha = direction_track.Mag2() -
+            (component == 0 ? direction_track.X() * direction_track.X() : direction_track.Y() * direction_track.Y());
+    beta = 2 * (state_track - state_cylinder).Dot(direction_track) -
+           2 * (component == 0 ? direction_track.X() * (state_track.X() - state_cylinder.X())
+                               : direction_track.Y() * (state_track.Y() - state_cylinder.Y()));
+    gamma = state_track.Mag2() + state_cylinder.Mag2() -
+            (component == 0 ? state_track.X() * state_track.X() + state_cylinder.X() * state_cylinder.X()
+                            : state_track.Y() * state_track.Y() + state_cylinder.Y() * state_cylinder.Y()) -
+            2 * ((component == 0 ? state_track.Y() * state_cylinder.Y() : state_track.X() * state_cylinder.X()) +
+                 state_track.Z() * state_cylinder.Z()) -
+            (m_radius * m_radius);
 
     // Check if the quadratic equation has a solution
     double discriminant = beta * beta - 4 * alpha * gamma;
