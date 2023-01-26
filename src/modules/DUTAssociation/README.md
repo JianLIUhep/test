@@ -1,3 +1,7 @@
+---
+# SPDX-FileCopyrightText: 2017-2023 CERN and the Corryvreckan authors
+# SPDX-License-Identifier: CC-BY-4.0 OR MIT
+---
 # DUTAssociation
 **Maintainer**: Simon Spannagel (<simon.spannagel@cern.ch>)  
 **Module Type**: *DUT*  
@@ -28,6 +32,7 @@ For the DUT, the following plots are produced:
 * Histograms of the distance in X/Y from the cluster to the pixel closest to the track for various cluster sizes
 * Histogram of the number of associated clusters per track
 * Histogram of the number of clusters discarded by a given cut
+* 2D Histogram with the distance between a track and all DUT clusters of the event
 
 ### Usage
 ```toml

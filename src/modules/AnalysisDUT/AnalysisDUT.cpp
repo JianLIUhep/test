@@ -6,6 +6,7 @@
  * This software is distributed under the terms of the MIT License, copied verbatim in the file "LICENSE.md".
  * In applying this license, CERN does not waive the privileges and immunities granted to it by virtue of its status as an
  * Intergovernmental Organization or submit itself to any jurisdiction.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "AnalysisDUT.h"
@@ -919,7 +920,7 @@ StatusCode AnalysisDUT::run(const std::shared_ptr<Clipboard>& clipboard) {
             associatedTracksVersusTime->Fill(track->timestamp() / 1e9); // convert ns -> s
 
             // Check distance between track and cluster in local coordinates
-            ROOT::Math::XYZPoint intercept = m_detector->getLocalIntercept(track.get());
+            auto intercept = m_detector->getLocalIntercept(track.get());
             double local_x_distance = intercept.X() - assoc_cluster->local().x();
             double local_y_distance = intercept.Y() - assoc_cluster->local().y();
             double local_x_distance_um = local_x_distance * 1000.;
