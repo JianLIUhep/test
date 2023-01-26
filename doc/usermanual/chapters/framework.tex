@@ -262,12 +262,9 @@ The bending was implemented for rectangular pixels, with some caveats for bendin
 \begin{figure}[!htp]
 \centering
   \includegraphics[width=.81\linewidth]{bending_and_radius_definition.pdf}
-  \caption{Various geometries for sensors bent along the rows or columns. Local bent coordinate system definition (\textcolor{red}{red color}). Bent sensors are depicted with \textbf{black}. Their top side (eg: the part with circuitry for MAPS) is depicted with \textcolor{green}{green}. The convexity/concavity of sensors is defined with respect to the position of their top side (see the parameter \protect\parameter{radius} in Sec.~\ref{sssec:cylindrical_coord_system_params}). \\ Note: a rotation of \SI{180}{\degree} around the $y$-axis (for the sensors bent along rows) or $x$-axis (for sensors bent along the columns) respectively will have the same radius sign. Only the eversion of the sensor will yield a sign change of the radius.}
+  \caption{Coordinate system and geometry for sensors bent along the rows or columns. Local bent coordinate system definition (\textcolor{red}{red color}). Bent sensors are depicted with \textbf{black}. Their top side (eg: the part with circuitry for MAPS) is depicted with \textcolor{green}{green}. The convexity/concavity of sensors is defined with respect to the position of their top side (see the parameter \protect\parameter{radius} in Sec.~\ref{sssec:cylindrical_coord_system_params}). \\ Note: a rotation of \SI{180}{\degree} around the $y$-axis (for the sensors bent along rows) or $x$-axis (for sensors bent along the columns) respectively will have the same radius sign. Only the eversion of the sensor will yield a sign change of the radius.}
 \label{fig:bent_coord_syst}
 \end{figure}
-
-
-For the case of a sensor bent along the rows, there is the possibility to add a flat part (eg: where the sensor is bonded to the carrier card $\rightarrow$ locally at that point the sensor is flat) in addition to a bent part. This is represented by a purple line in Fig.~\ref{fig:bent_coord_syst} (top).
 
 
 \subsubsection{Cylindrical and cartesian coordinate transformations}
@@ -295,7 +292,7 @@ Let ($x$, $y$, $z$) be the standard Cartesian coordinates, and ($r$, $\theta$, $
 
 \begin{itemize}
     \item The \parameter{bent_axis} parameter specifies how the sensor is bent (see Fig.~\ref{fig:bent_coord_syst}). Two options are available: \texttt{row} and \texttt{column}. 
-    \item The \parameter{flat_part} parameter is used for sensors bent along the row direction and specifies if a part of the sensor is flat (and the rest bent). For a sensor bent along the column direction this parameter can be omitted, as it will be set to 0. 
+    \item The optional \parameter{rotate_by} parameter is used to specify an angle of rotation around the cylinder. Positive values represent a clockwise rotation, as shown in Fig.~\ref{fig:rotated_sensors} for a rotation of half a sensor length clockwise. N.B.: $\theta = \frac{s}{R}$. Defaults to `0deg'.
     \item The \parameter{radius} parameter specifies the bending radius of the sensor. The sign of the radius specifies how the sensor is bent (convex/concave) with respect to its top side (eg: the circuitry part on MAPS): a positive radius is defined for a geometry where the circuitry is decompressed (bent outward), while a negative radius is defined for a sensor with compressed circuitry (bent inward). Examples of the various radius definitions and rotations are given in Fig.~\ref{fig:bent_coord_syst}, Fig.~\ref{fig:rotated_sensors_along_rows}, Fig.~\ref{fig:rotated_sensors_along_col_1} and Fig.~\ref{fig:rotated_sensors_along_col_2}. 
     
     Note that rotations do not change the convexity/concavity, therefore the radius stays as defined (positive or negative). Eversion however will change the radius of the sensors.
@@ -321,7 +318,6 @@ Let ($x$, $y$, $z$) be the standard Cartesian coordinates, and ($r$, $\theta$, $
     \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
     bent_axis = "row"
     coordinates = "cartesian-bent"
-    flat_part = 0mm
     orientation = 0deg,0deg,0deg
     orientation_mode = "xyz"
     radius = 18mm
@@ -329,7 +325,6 @@ Let ($x$, $y$, $z$) be the standard Cartesian coordinates, and ($r$, $\theta$, $
     \begin{minted}[frame=single,framesep=3pt,breaklines=true,tabsize=2]{ini}
     bent_axis = "row"
     coordinates = "cartesian-bent"
-    flat_part = 0mm
     orientation = 0deg,0deg,0deg
     orientation_mode = "xyz"
     radius = -18mm
