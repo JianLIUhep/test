@@ -6,6 +6,7 @@
  * This software is distributed under the terms of the MIT License, copied verbatim in the file "LICENSE.md".
  * In applying this license, CERN does not waive the privileges and immunities granted to it by virtue of its status as an
  * Intergovernmental Organization or submit itself to any jurisdiction.
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef TRACKING4D_H
@@ -77,6 +78,7 @@ namespace corryvreckan {
         std::map<std::string, TH1F*> kinkY;
 
         std::map<std::string, TH2F*> local_intersects_;
+        std::map<std::string, TH2F*> global_intersects_;
 
         // Cuts for tracking
         double momentum_;

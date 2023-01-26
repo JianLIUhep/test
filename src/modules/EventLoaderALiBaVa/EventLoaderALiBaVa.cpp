@@ -6,6 +6,7 @@
  * This software is distributed under the terms of the MIT License, copied verbatim in the file "LICENSE.md".
  * In applying this license, CERN does not waive the privileges and immunities granted to it by virtue of its status as an
  * Intergovernmental Organization or submit itself to any jurisdiction.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "EventLoaderALiBaVa.h"
@@ -192,7 +193,7 @@ StatusCode EventLoaderALiBaVa::run(const std::shared_ptr<Clipboard>& clipboard) 
     double TDCTime = m_alibava->time();
     if(!m_alibava->valid_time(TDCTime)) {
         LOG(DEBUG) << "Event time of " << TDCTime << " ns outside of timecut limits; ignoring event";
-        return StatusCode::NoData;
+        return StatusCode::DeadTime;
     }
 
     double trigger_ts;
