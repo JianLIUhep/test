@@ -55,6 +55,7 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
 }
 
 XYZPoint BentPixelDetector::localToGlobal(XYZPoint local) const {
+    // Detector::Alignment alignment(*alignment_);
     double locx, locy, locz;
     // Axis of the sensor that is bent
     if(m_bent_axis == BentAxis::COLUMN) {
@@ -72,16 +73,17 @@ XYZPoint BentPixelDetector::localToGlobal(XYZPoint local) const {
         locy = m_radius * sin(local.y() / m_radius);
         locz = local.z() - m_radius * (1.0 - cos(local.y() / m_radius));
     }
-    ROOT::Math::XYZPoint local_transformed = m_localToGlobal * ROOT::Math::XYZPoint(locx, locy, locz);
+    ROOT::Math::XYZPoint local_transformed = toGlobal() * ROOT::Math::XYZPoint(locx, locy, locz);
     LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z() << ") to global point ("
                << local_transformed.x() << "|" << local_transformed.y() << "|" << local_transformed.z() << ").";
     return local_transformed;
 }
 
 XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
+    // Detector::Alignment alignment(*alignment_);
     double lx, ly, lz;
     // Transform from global to bent local
-    ROOT::Math::XYZPoint local_transformed = m_globalToLocal * global;
+    ROOT::Math::XYZPoint local_transformed = toLocal() * global;
     // Axis of the sensor that is bent
     if(m_bent_axis == BentAxis::COLUMN) {
         if(m_rotate_by != 0) {
@@ -109,14 +111,14 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
 }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Track* track) const {
-
+    // Detector::Alignment alignment(*alignment_);
     // Get and transform track state and direction
     PositionVector3D<Cartesian3D<double>> state_track = track->getState(m_detectorName);
     DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
 
     // Bring track to local (transformed) coordinate system
-    state_track = m_globalToLocal * state_track;
-    direction_track = m_globalToLocal.Rotation() * direction_track;
+    state_track = toLocal() * state_track;
+    direction_track = toLocal().Rotation() * direction_track;
     direction_track = direction_track.Unit();
 
     // From globalPlanarIntercept get intercept with bent surface of pixel detector
@@ -152,7 +154,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
                                               state_track.y() + param * direction_track.y(),
                                               state_track.z() + param * direction_track.z());
 
-    return m_localToGlobal * localBentIntercept;
+    return toGlobal() * localBentIntercept;
 }
 
 void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesian3D<double>>& state_track,
@@ -194,23 +196,12 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
 
 bool BentPixelDetector::hasIntercept(const Track* track, double pixelTolerance) const {
 
-    // First, get the track intercept in global coordinates with the plane
+    bool intercept = PixelDetector::hasIntercept(track, pixelTolerance);
+    if(!intercept)
+        return intercept;
+
+    // Get the global intercept
     PositionVector3D<Cartesian3D<double>> globalIntercept = this->getIntercept(track);
-
-    // Convert to local coordinates
-    PositionVector3D<Cartesian3D<double>> localIntercept = this->m_globalToLocal * globalIntercept;
-
-    // Get the row and column numbers
-    double row = this->getRow(localIntercept);
-    double column = this->getColumn(localIntercept);
-
-    // Check if the row and column are outside of the chip
-    // Chip reaches from -0.5 to nPixels-0.5
-    bool intercept = true;
-    if(row < pixelTolerance - 0.5 || row > (this->m_nPixels.Y() - pixelTolerance - 0.5) || column < pixelTolerance - 0.5 ||
-       column > (this->m_nPixels.X() - pixelTolerance - 0.5)) {
-        intercept = false;
-    }
 
     // Check if the cylinder surface - track intercept parameters are valid
     std::vector<double> coords(3);
