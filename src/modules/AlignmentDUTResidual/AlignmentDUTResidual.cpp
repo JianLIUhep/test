@@ -58,6 +58,12 @@ AlignmentDUTResidual::AlignmentDUTResidual(Configuration& config, std::shared_pt
     m_maxAssocClusters = config_.get<size_t>("max_associated_clusters");
     m_maxTrackChi2 = config_.get<double>("max_track_chi2ndof");
 
+    // Check that we're not in a variable-alignment situation:
+    if(m_detector->hasVariableAlignment()) {
+        throw ModuleError("Cannot perform alignment procedure with variable alignment of detector \"" +
+                          m_detector->getName() + "\"");
+    }
+
     LOG(INFO) << "Aligning detector \"" << m_detector->getName() << "\"";
 }
 
@@ -88,7 +94,7 @@ StatusCode AlignmentDUTResidual::run(const std::shared_ptr<Clipboard>& clipboard
     auto tracks = clipboard->getData<Track>();
 
     TrackVector alignmenttracks;
-    std::vector<Cluster*> alignmentclusters;
+    std::map<std::string, std::vector<Cluster*>> alignmentclusters;
 
     // Make a local copy and store it
     for(auto& track : tracks) {
@@ -120,7 +126,9 @@ StatusCode AlignmentDUTResidual::run(const std::shared_ptr<Clipboard>& clipboard
         // Keep this track on persistent storage for alignment:
         alignmenttracks.push_back(track);
         // Append associated clusters to the list we want to keep:
-        alignmentclusters.insert(alignmentclusters.end(), associated_clusters.begin(), associated_clusters.end());
+        for(const auto& cluster : associated_clusters) {
+            alignmentclusters[m_detector->getName()].push_back(cluster);
+        }
 
         // Find the cluster that needs to have its position recalculated
         for(auto& associated_cluster : associated_clusters) {
@@ -145,12 +153,20 @@ StatusCode AlignmentDUTResidual::run(const std::shared_ptr<Clipboard>& clipboard
             profile_dX_X->Fill(column, static_cast<double>(Units::convert(residualX, "um")), 1);
             profile_dX_Y->Fill(row, static_cast<double>(Units::convert(residualX, "um")), 1);
         }
+
+        // Since we need to refit the full track, also store the track clusters:
+        for(const auto& cluster : track->getClusters()) {
+            alignmentclusters[cluster->detectorID()].push_back(cluster);
+        }
     }
 
     // Store all tracks we want for alignment on the permanent storage:
     clipboard->putPersistentData(alignmenttracks, m_detector->getName());
-    // Copy the objects of all associated clusters on the clipboard to persistent storage:
-    clipboard->copyToPersistentData(alignmentclusters, m_detector->getName());
+
+    // Copy the objects of all track clusters on the clipboard to persistent storage:
+    for(auto& clusters : alignmentclusters) {
+        clipboard->copyToPersistentData(clusters.second, clusters.first);
+    }
 
     // Otherwise keep going
     return StatusCode::Success;
@@ -164,12 +180,8 @@ void AlignmentDUTResidual::MinimiseResiduals(Int_t&, Double_t*, Double_t& result
 
     static size_t fitIterations = 0;
 
-    // Pick up new alignment conditions
-    AlignmentDUTResidual::globalDetector->displacement(XYZPoint(par[0], par[1], par[2]));
-    AlignmentDUTResidual::globalDetector->rotation(XYZVector(par[3], par[4], par[5]));
-
     // Apply new alignment conditions
-    AlignmentDUTResidual::globalDetector->update();
+    AlignmentDUTResidual::globalDetector->update(XYZPoint(par[0], par[1], par[2]), XYZVector(par[3], par[4], par[5]));
     LOG(DEBUG) << "Updated parameters for " << AlignmentDUTResidual::globalDetector->getName();
 
     // The chi2 value to be returned
@@ -181,11 +193,11 @@ void AlignmentDUTResidual::MinimiseResiduals(Int_t&, Double_t*, Double_t& result
     auto track_refit = [&](auto& track) {
         LOG(TRACE) << "track has chi2 " << track->getChi2();
 
-        // Update geometry of plane with new detector geometry
-        track->registerPlane(AlignmentDUTResidual::globalDetector->getName(),
-                             AlignmentDUTResidual::globalDetector->origin().z(),
-                             AlignmentDUTResidual::globalDetector->materialBudget(),
-                             AlignmentDUTResidual::globalDetector->toLocal());
+        // Update geometry of plane with new detector geometry and refit to obtain new track state
+        track->updatePlane(AlignmentDUTResidual::globalDetector->getName(),
+                           AlignmentDUTResidual::globalDetector->origin().z(),
+                           AlignmentDUTResidual::globalDetector->materialBudget(),
+                           AlignmentDUTResidual::globalDetector->toLocal());
 
         double track_result = 0.;
 
@@ -194,17 +206,7 @@ void AlignmentDUTResidual::MinimiseResiduals(Int_t&, Double_t*, Double_t& result
 
             // Get the track intercept with the detector
             auto position = associatedCluster->local();
-            auto trackIntercept = AlignmentDUTResidual::globalDetector->getIntercept(track.get());
-            auto intercept = AlignmentDUTResidual::globalDetector->globalToLocal(trackIntercept);
-
-            /*
-            // Recalculate the global position from the local
-            auto positionLocal = associatedCluster->local();
-            auto position = AlignmentDUTResidual::globalDetector->localToGlobal(positionLocal);
-
-            // Get the track intercept with the detector
-            ROOT::Math::XYZPoint intercept = track->intercept(position.Z());
-            */
+            auto intercept = AlignmentDUTResidual::globalDetector->getLocalIntercept(track.get());
 
             // Calculate the residuals
             double residualX = intercept.X() - position.X();
@@ -350,11 +352,9 @@ void AlignmentDUTResidual::finalize(const std::shared_ptr<ReadonlyClipboard>& cl
         residualFitter->ExecuteCommand("MIGRAD", arglist, 2);
 
         // Set the alignment parameters of this plane to be the optimised values from the alignment
-        m_detector->displacement(
-            XYZPoint(residualFitter->GetParameter(0), residualFitter->GetParameter(1), residualFitter->GetParameter(2)));
-        m_detector->rotation(
+        m_detector->update(
+            XYZPoint(residualFitter->GetParameter(0), residualFitter->GetParameter(1), residualFitter->GetParameter(2)),
             XYZVector(residualFitter->GetParameter(3), residualFitter->GetParameter(4), residualFitter->GetParameter(5)));
-        m_detector->update();
 
         // Store corrections:
         shiftsX.push_back(static_cast<double>(Units::convert(m_detector->displacement().X() - old_position.X(), "um")));
