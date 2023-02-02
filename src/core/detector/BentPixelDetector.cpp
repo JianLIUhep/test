@@ -55,7 +55,6 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
 }
 
 XYZPoint BentPixelDetector::localToGlobal(XYZPoint local) const {
-    // Detector::Alignment alignment(*alignment_);
     double locx, locy, locz;
     // Axis of the sensor that is bent
     if(m_bent_axis == BentAxis::COLUMN) {
@@ -80,7 +79,6 @@ XYZPoint BentPixelDetector::localToGlobal(XYZPoint local) const {
 }
 
 XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
-    // Detector::Alignment alignment(*alignment_);
     double lx, ly, lz;
     // Transform from global to bent local
     ROOT::Math::XYZPoint local_transformed = toLocal() * global;
@@ -111,7 +109,6 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
 }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Track* track) const {
-    // Detector::Alignment alignment(*alignment_);
     // Get and transform track state and direction
     PositionVector3D<Cartesian3D<double>> state_track = track->getState(m_detectorName);
     DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
@@ -123,21 +120,18 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
 
     // From globalPlanarIntercept get intercept with bent surface of pixel detector
     InterceptParameters intercept_parameters;
-    if(m_bent_axis == BentAxis::COLUMN) {
-        // Define/initialise detector cylinder in local_transformed coordinates
-        ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder(0, 0, -m_radius);
-        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder(
-            0, 1, 0); // cylinder axis along y (row)
+    ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder;
+    ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder;
 
-        get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
-
+    if (m_bent_axis == BentAxis::COLUMN) {
+        state_cylinder = {0, 0, -m_radius};
+        direction_cylinder = {0, 1, 0}; // cylinder axis along y (row)
     } else {
-        ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder(0, this->getSize().Y() / 2, -m_radius);
-        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder(
-            1, 0, 0); // cylinder axis along x (column)
-
-        get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
+        state_cylinder = {0, this->getSize().Y() / 2, -m_radius};
+        direction_cylinder = {1, 0, 0}; // cylinder axis along x (column)
     }
+
+    get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
 
     // Select solution according to bending direction
     PositionVector3D<Cartesian3D<double>> localBentIntercept;
