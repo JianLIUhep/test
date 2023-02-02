@@ -123,7 +123,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>> state_cylinder;
     ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder;
 
-    if (m_bent_axis == BentAxis::COLUMN) {
+    if(m_bent_axis == BentAxis::COLUMN) {
         state_cylinder = {0, 0, -m_radius};
         direction_cylinder = {0, 1, 0}; // cylinder axis along y (row)
     } else {
