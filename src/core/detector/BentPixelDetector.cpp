@@ -11,16 +11,9 @@
 #include <map>
 #include <string>
 
-#include "Math/DisplacementVector2D.h"
-#include "Math/PositionVector3D.h"
-#include "Math/RotationX.h"
-#include "Math/RotationY.h"
-#include "Math/RotationZ.h"
-#include "Math/RotationZYX.h"
 
 #include "BentPixelDetector.hpp"
 #include "core/utils/log.h"
-#include "exceptions.h"
 
 using namespace ROOT::Math;
 using namespace corryvreckan;

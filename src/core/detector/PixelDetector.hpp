@@ -23,8 +23,6 @@
 
 #include "Detector.hpp"
 #include "core/config/Configuration.hpp"
-#include "core/utils/ROOT.h"
-#include "core/utils/log.h"
 #include "objects/Cluster.hpp"
 #include "objects/Pixel.hpp"
 #include "objects/Track.hpp"
