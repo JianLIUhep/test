@@ -104,7 +104,7 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
 PositionVector3D<Cartesian3D<double> > BentPixelDetector::getLocalPosition(double column, double row) const
 {
     ROOT::Math::RhoZPhiVector local;
-    // long live the cylinders - define "zero degree" at center of chip
+    // (almost) almighty  cylinders - define "zero degree" at center of chip
     if(m_bent_axis == BentAxis::COLUMN) {
         local = ROOT::Math::RhoZPhiVector(row*m_pitch.Y(),m_radius,(m_nPixels.x()/2.-column)/ m_radius);
     }
