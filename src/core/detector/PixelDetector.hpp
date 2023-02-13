@@ -96,7 +96,7 @@ namespace corryvreckan {
         double getColumn(PositionVector3D<Cartesian3D<double>> localPosition) const override;
 
         // Function to get local position from column (x) and row (y) coordinates
-        PositionVector3D<Cartesian3D<double>> getLocalPosition(double column, double row) const override;
+        virtual PositionVector3D<Cartesian3D<double>> getLocalPosition(double column, double row) const;
 
         // Function to get row and column of pixel
         std::pair<int, int> getInterceptPixel(PositionVector3D<Cartesian3D<double>> localPosition) const override;

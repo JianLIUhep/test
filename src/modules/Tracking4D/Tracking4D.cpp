@@ -130,14 +130,30 @@ void Tracking4D::initialize() {
                                                  detector->nPixels().Y(),
                                                  0,
                                                  detector->nPixels().Y());
-        global_intersects_[detectorID] = new TH2F("global_intersect",
-                                                  "global intersect, global intercept x [mm];global intercept y [mm]",
+        global_intersects_[detectorID] = new TH2F("global_intersect_XY",
+                                                  "global intersect XY; global intercept x [mm];global intercept y [mm]",
                                                   600,
                                                   -30,
                                                   30,
                                                   600,
                                                   -30,
                                                   30);
+        auto offset = detector->localToGlobal(XYZPoint(0.,0.,0.));
+        global_z_x_[detectorID] = new TH2F("global_intersect_XZ",
+                                                                                                        "global intersect XZ; global intercept z [mm];global intercept X [mm]",
+                                                                                                        600,
+                                                                                                        offset.Z()-10,
+                                                                                                        offset.Z()+10,                                                                                                        600,
+                                           -30,
+                                           30);
+        global_z_y_[detectorID] = new TH2F("global_intersect_YZ",
+                                                                                                        "global intersect YZ; global intercept z [mm];global intercept Y [mm]",
+                                                                                                        600,
+                                                                                                        offset.Z()-10,
+                                                                                                        offset.Z()+10,
+                                           600,
+                                           -30,
+                                           30                                           );
 
         // Do not create plots for detectors not participating in the tracking:
         if(exclude_DUT_ && detector->isDUT()) {
@@ -636,7 +652,8 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
 
             auto global = detector->getIntercept(track.get());
             global_intersects_[det]->Fill(global.X(), global.Y());
-
+            global_z_x_[det]->Fill(global.Z(), global.X());
+            global_z_y_[det]->Fill(global.Z(), global.Y());
             if(!kinkX.count(det)) {
                 LOG(WARNING) << "Skipping writing kinks due to missing init of histograms for  " << det;
                 continue;

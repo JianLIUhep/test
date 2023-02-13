@@ -15,6 +15,7 @@
 #include <string>
 
 #include "Math/DisplacementVector2D.h"
+#include "Math/Point3Dfwd.h"
 #include "Math/Transform3D.h"
 #include "Math/Vector2D.h"
 #include "Math/Vector3D.h"
@@ -73,6 +74,7 @@ namespace corryvreckan {
          */
         XYZPoint globalToLocal(XYZPoint global) const override;
 
+        PositionVector3D<Cartesian3D<double>> getLocalPosition(double column, double row) const override;
     private:
         /**
          * @brief Different bent axis types
