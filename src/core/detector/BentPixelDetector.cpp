@@ -11,7 +11,6 @@
 #include <map>
 #include <string>
 
-
 #include "BentPixelDetector.hpp"
 #include "core/utils/log.h"
 
@@ -101,17 +100,15 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
     return local;
 }
 
-PositionVector3D<Cartesian3D<double> > BentPixelDetector::getLocalPosition(double column, double row) const
-{
+PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalPosition(double column, double row) const {
     ROOT::Math::RhoZPhiVector local;
     // (almost) almighty  cylinders - define "zero degree" at center of chip
     if(m_bent_axis == BentAxis::COLUMN) {
-        local = ROOT::Math::RhoZPhiVector(row*m_pitch.Y(),m_radius,(m_nPixels.x()/2.-column)/ m_radius);
+        local = ROOT::Math::RhoZPhiVector(row * m_pitch.Y(), m_radius, (m_nPixels.x() / 2. - column) / m_radius);
+    } else {
+        local = ROOT::Math::RhoZPhiVector(column * m_pitch.X(), m_radius, (m_nPixels.y() / 2. - row) / m_radius);
     }
-    else{
-        local = ROOT::Math::RhoZPhiVector(column*m_pitch.X(),m_radius,(m_nPixels.y()/2.-row)/ m_radius);
-    }
-    return static_cast<PositionVector3D<Cartesian3D<double> >>(local);
+    return static_cast<PositionVector3D<Cartesian3D<double>>>(local);
 }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Track* track) const {

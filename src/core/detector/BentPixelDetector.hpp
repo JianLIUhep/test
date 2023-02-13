@@ -75,6 +75,7 @@ namespace corryvreckan {
         XYZPoint globalToLocal(XYZPoint global) const override;
 
         PositionVector3D<Cartesian3D<double>> getLocalPosition(double column, double row) const override;
+
     private:
         /**
          * @brief Different bent axis types

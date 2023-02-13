@@ -138,22 +138,23 @@ void Tracking4D::initialize() {
                                                   600,
                                                   -30,
                                                   30);
-        auto offset = detector->localToGlobal(XYZPoint(0.,0.,0.));
+        auto offset = detector->localToGlobal(XYZPoint(0., 0., 0.));
         global_z_x_[detectorID] = new TH2F("global_intersect_XZ",
-                                                                                                        "global intersect XZ; global intercept z [mm];global intercept X [mm]",
-                                                                                                        600,
-                                                                                                        offset.Z()-10,
-                                                                                                        offset.Z()+10,                                                                                                        600,
+                                           "global intersect XZ; global intercept z [mm];global intercept X [mm]",
+                                           600,
+                                           offset.Z() - 10,
+                                           offset.Z() + 10,
+                                           600,
                                            -30,
                                            30);
         global_z_y_[detectorID] = new TH2F("global_intersect_YZ",
-                                                                                                        "global intersect YZ; global intercept z [mm];global intercept Y [mm]",
-                                                                                                        600,
-                                                                                                        offset.Z()-10,
-                                                                                                        offset.Z()+10,
+                                           "global intersect YZ; global intercept z [mm];global intercept Y [mm]",
+                                           600,
+                                           offset.Z() - 10,
+                                           offset.Z() + 10,
                                            600,
                                            -30,
-                                           30                                           );
+                                           30);
 
         // Do not create plots for detectors not participating in the tracking:
         if(exclude_DUT_ && detector->isDUT()) {
@@ -664,6 +665,7 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
             kinkY.at(det)->Fill(kink.y());
         }
     }
+
     tracksPerEvent->Fill(static_cast<double>(tracks.size()));
 
     LOG(DEBUG) << "End of event";
