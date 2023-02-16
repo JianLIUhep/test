@@ -46,67 +46,72 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
     config.set("bent_axis", m_bent_axis);
 }
 
-XYZPoint BentPixelDetector::localToGlobal(XYZPoint local) const {
-    double locx, locy, locz;
-    // Axis of the sensor that is bent
-    if(m_bent_axis == BentAxis::COLUMN) {
-        if(m_rotate_by != 0) {
-            local.SetX(local.x() + static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
-        }
-        locx = m_radius * sin(local.x() / m_radius);
-        locy = local.y();
-        locz = local.z() - m_radius * (1.0 - cos(local.x() / m_radius));
-    } else {
-        if(m_rotate_by != 0) {
-            local.SetY(local.y() + static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
-        }
-        locx = local.x();
-        locy = m_radius * sin(local.y() / m_radius);
-        locz = local.z() - m_radius * (1.0 - cos(local.y() / m_radius));
-    }
-    ROOT::Math::XYZPoint local_transformed = toGlobal() * ROOT::Math::XYZPoint(locx, locy, locz);
-    LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z() << ") to global point ("
-               << local_transformed.x() << "|" << local_transformed.y() << "|" << local_transformed.z() << ").";
-    return local_transformed;
-}
+// XYZPoint BentPixelDetector::localToGlobal(XYZPoint local) const {
+//     double locx, locy, locz;
+//     // Axis of the sensor that is bent
+//     if(m_bent_axis == BentAxis::COLUMN) {
+//         if(m_rotate_by != 0) {
+//             local.SetX(local.x() + static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
+//         }
+//         locx = m_radius * sin(local.x() / m_radius);
+//         locy = local.y();
+//         locz = local.z() - m_radius * (1.0 - cos(local.x() / m_radius));
+//     } else {
+//         if(m_rotate_by != 0) {
+//             local.SetY(local.y() + static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
+//         }
+//         locx = local.x();
+//         locy = m_radius * sin(local.y() / m_radius);
+//         locz = local.z() - m_radius * (1.0 - cos(local.y() / m_radius));
+//     }
+//     ROOT::Math::XYZPoint local_transformed = toGlobal() * ROOT::Math::XYZPoint(locx, locy, locz);
+//     LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z() << ") to global point ("
+//                << local_transformed.x() << "|" << local_transformed.y() << "|" << local_transformed.z() << ").";
+//     return local_transformed;
+// }
 
-XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
-    double lx, ly, lz;
-    // Transform from global to bent local
-    ROOT::Math::XYZPoint local_transformed = toLocal() * global;
-    // Axis of the sensor that is bent
-    if(m_bent_axis == BentAxis::COLUMN) {
-        if(m_rotate_by != 0) {
-            local_transformed.SetX(local_transformed.x() +
-                                   static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
-        }
-        lx = m_radius * asin(local_transformed.x() / m_radius);
-        ly = local_transformed.y();
-        lz = m_radius * (cos(asin(local_transformed.x() / m_radius) / m_radius) -
-                         1); // TODO: should z be 0 in local coords(i.e. add loc_tr.z())?
-    } else {
-        if(m_rotate_by != 0) {
-            local_transformed.SetY(local_transformed.y() +
-                                   static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
-        }
-        lx = local_transformed.x();
-        ly = m_radius * asin(local_transformed.y() / m_radius);
-        lz = m_radius * (cos(asin(local_transformed.y() / m_radius) / m_radius) -
-                         1); // TODO: should z be 0 in local coords(i.e. add loc_tr.z())?
-    }
-    ROOT::Math::XYZPoint local = ROOT::Math::XYZPoint(lx, ly, lz);
-    LOG(TRACE) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z()
-               << ") to local point (" << local.x() << "|" << local.y() << "|" << local.z() << ").";
-    return local;
-}
+// XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
+//     double lx, ly, lz;
+//     // Transform from global to bent local
+//     ROOT::Math::XYZPoint local_transformed = toLocal() * global;
+//     // Axis of the sensor that is bent
+//     if(m_bent_axis == BentAxis::COLUMN) {
+//         if(m_rotate_by != 0) {
+//             local_transformed.SetX(local_transformed.x() +
+//                                    static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
+//         }
+//         lx = m_radius * asin(local_transformed.x() / m_radius);
+//         ly = local_transformed.y();
+//         lz = m_radius * (cos(asin(local_transformed.x() / m_radius) / m_radius) -
+//                          1); // TODO: should z be 0 in local coords(i.e. add loc_tr.z())?
+//     } else {
+//         if(m_rotate_by != 0) {
+//             local_transformed.SetY(local_transformed.y() +
+//                                    static_cast<double>(Units::convert(m_rotate_by, "rad")) * m_radius);
+//         }
+//         lx = local_transformed.x();
+//         ly = m_radius * asin(local_transformed.y() / m_radius);
+//         lz = m_radius * (cos(asin(local_transformed.y() / m_radius) / m_radius) -
+//                          1); // TODO: should z be 0 in local coords(i.e. add loc_tr.z())?
+//     }
+//     ROOT::Math::XYZPoint local = ROOT::Math::XYZPoint(lx, ly, lz);
+//     LOG(TRACE) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z()
+//                << ") to local point (" << local.x() << "|" << local.y() << "|" << local.z() << ").";
+//     return local;
+// }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalPosition(double column, double row) const {
     ROOT::Math::RhoZPhiVector local;
     // (almost) almighty  cylinders - define "zero degree" at center of chip
     if(m_bent_axis == BentAxis::COLUMN) {
-        local = ROOT::Math::RhoZPhiVector(row * m_pitch.Y(), m_radius, (m_nPixels.x() / 2. - column) / m_radius);
+        //local = ROOT::Math::RhoZPhiVector(row * m_pitch.Y(), m_radius, (m_nPixels.x() / 2. - column) / m_radius);
+        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(-m_radius));
+        // so Rho = r = radius, 
+        // z is the movement along the non-bent part (along the main axis of the cylinder, on the cyl surface); so, only a change from corner of the sensor (0,0)=(row,col) to chip middle is needed
+        // phi is calcualted on the bent part, using the arclength/radius; it should be 0 at chip middle, for 0deg; positive upwards, negative downwards (so m_radius must come with negative sign?); arclen = how many pixels are above this 0deg point.
     } else {
-        local = ROOT::Math::RhoZPhiVector(column * m_pitch.X(), m_radius, (m_nPixels.y() / 2. - row) / m_radius);
+        //local = ROOT::Math::RhoZPhiVector(column * m_pitch.X(), m_radius, (m_nPixels.y() / 2. - row) / m_radius);
+        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.))/(-m_radius), m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.));
     }
     return static_cast<PositionVector3D<Cartesian3D<double>>>(local);
 }

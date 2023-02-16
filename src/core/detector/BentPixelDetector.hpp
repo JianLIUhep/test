@@ -60,19 +60,19 @@ namespace corryvreckan {
         // Function to check if a track intercepts with a plane
         bool hasIntercept(const Track* track, double pixelTolerance = 0.) const override;
 
-        /**
-         * @brief Transform local coordinates of this detector into global coordinates
-         * @param  local Local coordinates in the reference frame of this detector
-         * @return       Global coordinates
-         */
-        XYZPoint localToGlobal(XYZPoint local) const override;
+        // /**
+        //  * @brief Transform local coordinates of this detector into global coordinates
+        //  * @param  local Local coordinates in the reference frame of this detector
+        //  * @return       Global coordinates
+        //  */
+        // XYZPoint localToGlobal(XYZPoint local) const override;
 
-        /**
-         * @brief Transform global coordinates into detector-local coordinates
-         * @param  global Global coordinates
-         * @return        Local coordinates in the reference frame of this detector
-         */
-        XYZPoint globalToLocal(XYZPoint global) const override;
+        // /**
+        //  * @brief Transform global coordinates into detector-local coordinates
+        //  * @param  global Global coordinates
+        //  * @return        Local coordinates in the reference frame of this detector
+        //  */
+        // XYZPoint globalToLocal(XYZPoint global) const override;
 
         PositionVector3D<Cartesian3D<double>> getLocalPosition(double column, double row) const override;
 
