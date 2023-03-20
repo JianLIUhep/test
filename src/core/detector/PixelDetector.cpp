@@ -68,7 +68,7 @@ void PixelDetector::build_axes(const Configuration& config) {
     }
 
     // Intrinsic spatial resolution, defaults to pitch/sqrt(12):
-    m_spatial_resolution = config.get<ROOT::Math::XYVector>("spatial_resolution", m_pitch / std::sqrt(12));
+    m_spatial_resolution = config.get<ROOT::Math::XYZVector>("spatial_resolution");
     if(!config.has("spatial_resolution")) {
         LOG(WARNING) << "Spatial resolution for detector '" << m_detectorName << "' not set." << std::endl
                      << "Using pitch/sqrt(12) as default";

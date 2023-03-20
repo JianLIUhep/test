@@ -227,7 +227,7 @@ namespace corryvreckan {
          * @return Intrinsic spatial resolution in X and Y
          * @todo: this is designed for PixelDetector, find a proper interface for other Detector type
          */
-        virtual XYVector getSpatialResolution([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) = 0;
+        virtual XYZVector getSpatialResolution([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) = 0;
 
         /**
          * @brief Get intrinsic spatial resolution in global coordinates of the detector

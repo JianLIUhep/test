@@ -54,7 +54,7 @@ namespace corryvreckan {
          */
         BentPixelDetector(const Configuration& config);
 
-        XYVector getSpatialResolution(double column, double row) override;
+        XYZVector getSpatialResolution(double column, double row) override;
 
         TMatrixD getSpatialResolutionMatrixGlobal(double column, double row) override;
 
@@ -143,6 +143,9 @@ namespace corryvreckan {
         double m_radius;
         double m_rotate_by;
         PositionVector3D<Cartesian3D<double>> m_local;
+    
+    protected:
+        XYZVector m_spatial_resolution{};
     };
 } // namespace corryvreckan
 

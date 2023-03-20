@@ -19,11 +19,6 @@ using namespace corryvreckan;
 
 BentPixelDetector::BentPixelDetector(const Configuration& config) : PixelDetector(config) {
     build_axes(config);
-    TMatrixD errorMatrix(3, 3);
-    TMatrixD locToGlob(3, 3), globToLoc(3, 3);
-    errorMatrix(0, 0) = m_spatial_resolution.x() * m_spatial_resolution.x();
-    errorMatrix(1, 1) = m_spatial_resolution.y() * m_spatial_resolution.y();
-    m_spatial_resolution_matrix_global =  errorMatrix;
 
 }
 
@@ -108,7 +103,7 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
 
 
 // no need to implement as everything is in build_axes (See l78, l62 in pxdet.cpp)?
-XYVector BentPixelDetector::getSpatialResolution(double column, double row) {
+XYZVector BentPixelDetector::getSpatialResolution(double column, double row) {
 
     double theta = 0.0;
     if(m_bent_axis == BentAxis::COLUMN) {
@@ -118,13 +113,14 @@ XYVector BentPixelDetector::getSpatialResolution(double column, double row) {
         theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
     }
 
-    XYVector sp_reso{m_spatial_resolution.x(), m_spatial_resolution.y()};
+    XYZVector sp_reso{m_spatial_resolution.x(), m_spatial_resolution.y(), m_spatial_resolution.z()};
 
     sp_reso.SetX(m_spatial_resolution.x() * cos (theta)); 
-    // sp_reso.SetY(m_spatial_resolution.y())
+    sp_reso.SetZ(m_spatial_resolution.x() * sin (theta));
     // m_spatial_resolution.SetY(m_spatial_resolution.y() * sin (theta));
     LOG(INFO) << "B: m_sp_res X  = " << sp_reso.x();
     LOG(INFO) << "B: m_sp_res Y  = " << sp_reso.y();
+    LOG(INFO) << "B: m_sp_res Z  = " << sp_reso.z();
     return sp_reso;
 }
 
@@ -144,9 +140,10 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
     else {
         theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
     }
-    errorMatrix(0, 0) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * cos (theta);
+    errorMatrix(0, 0) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x();
     errorMatrix(1, 1) = getSpatialResolution(column,row).y() * getSpatialResolution(column,row).y();
-    errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * sin (theta);
+    // errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * sin (theta);
+    errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x();
 
     LOG(INFO) << "B: errmat = ";
     errorMatrix.Print();
