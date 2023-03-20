@@ -19,6 +19,12 @@ using namespace corryvreckan;
 
 BentPixelDetector::BentPixelDetector(const Configuration& config) : PixelDetector(config) {
     build_axes(config);
+    TMatrixD errorMatrix(3, 3);
+    TMatrixD locToGlob(3, 3), globToLoc(3, 3);
+    errorMatrix(0, 0) = m_spatial_resolution.x() * m_spatial_resolution.x();
+    errorMatrix(1, 1) = m_spatial_resolution.y() * m_spatial_resolution.y();
+    m_spatial_resolution_matrix_global =  errorMatrix;
+
 }
 
 void BentPixelDetector::build_axes(const Configuration& config) {
@@ -100,19 +106,76 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
 //     return local;
 // }
 
+
+// no need to implement as everything is in build_axes (See l78, l62 in pxdet.cpp)?
+XYVector BentPixelDetector::getSpatialResolution(double column, double row) {
+
+    double theta = 0.0;
+    if(m_bent_axis == BentAxis::COLUMN) {
+        theta = m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.) / (m_radius);
+    }
+    else {
+        theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
+    }
+
+    XYVector sp_reso{m_spatial_resolution.x(), m_spatial_resolution.y()};
+
+    sp_reso.SetX(m_spatial_resolution.x() * cos (theta)); 
+    // sp_reso.SetY(m_spatial_resolution.y())
+    // m_spatial_resolution.SetY(m_spatial_resolution.y() * sin (theta));
+    LOG(INFO) << "B: m_sp_res X  = " << sp_reso.x();
+    LOG(INFO) << "B: m_sp_res Y  = " << sp_reso.y();
+    return sp_reso;
+}
+
+TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, double row) {
+    TMatrixD errorMatrix(3, 3);
+    TMatrixD locToGlob(3, 3), globToLoc(3, 3);
+
+    double theta = 0.0;
+    if(m_bent_axis == BentAxis::COLUMN) {
+        theta = m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.) / (m_radius);
+        LOG(INFO) << "B: rad = " << m_radius;
+        LOG(INFO) << "B: col = " << column;
+        std::cout << "COLUMN = " << column << std::endl;
+        LOG(INFO) << "B: theta down = " << theta;
+        LOG(INFO) << "B: Spatial res = " << getSpatialResolution(column,row);
+    }
+    else {
+        theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
+    }
+    errorMatrix(0, 0) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * cos (theta);
+    errorMatrix(1, 1) = getSpatialResolution(column,row).y() * getSpatialResolution(column,row).y();
+    errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * sin (theta);
+
+    LOG(INFO) << "B: errmat = ";
+    errorMatrix.Print();
+    // LOG(WARNING) << "B: l2g = " << alignment_->local2global();
+    // LOG(WARNING) << "B: l2g rot = " << alignment_->local2global().Rotation();
+    // LOG(WARNING) << "B: g2l = " << alignment_->global2local();
+    // LOG(WARNING) << "B: g2l rot = " << alignment_->global2local().Rotation();
+    alignment_->local2global().Rotation().GetRotationMatrix(locToGlob);
+    alignment_->global2local().Rotation().GetRotationMatrix(globToLoc);
+
+    m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
+    LOG(INFO) << "B: m_spatial_resolution_matrix_global:";
+    m_spatial_resolution_matrix_global.Print();
+
+    return m_spatial_resolution_matrix_global;
+}
+
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalPosition(double column, double row) const {
     ROOT::Math::RhoZPhiVector local;
     // (almost) almighty  cylinders - define "zero degree" at center of chip
     if(m_bent_axis == BentAxis::COLUMN) {
-        //local = ROOT::Math::RhoZPhiVector(row * m_pitch.Y(), m_radius, (m_nPixels.x() / 2. - column) / m_radius);
-        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(-m_radius));
-        // so Rho = r = radius, 
-        // z is the movement along the non-bent part (along the main axis of the cylinder, on the cyl surface); so, only a change from corner of the sensor (0,0)=(row,col) to chip middle is needed
-        // phi is calcualted on the bent part, using the arclength/radius; it should be 0 at chip middle, for 0deg; positive upwards, negative downwards (so m_radius must come with negative sign?); arclen = how many pixels are above this 0deg point.
+        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(m_radius));
+        //LOG(INFO) << "col, row = " << column << "," << row ;
+        //LOG(INFO) << "local = " << local;
     } else {
-        //local = ROOT::Math::RhoZPhiVector(column * m_pitch.X(), m_radius, (m_nPixels.y() / 2. - row) / m_radius);
+        // not yet corrected; should just be a swap
         local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.))/(-m_radius), m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.));
     }
+    LOG(INFO) << "local cart = " << static_cast<PositionVector3D<Cartesian3D<double>>>(local);
     return static_cast<PositionVector3D<Cartesian3D<double>>>(local);
 }
 
@@ -132,13 +195,13 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>> direction_cylinder;
 
     if(m_bent_axis == BentAxis::COLUMN) {
-        state_cylinder = {0, 0, -m_radius};
+        state_cylinder = {0, 0, m_radius};
         direction_cylinder = {0, 1, 0}; // cylinder axis along y (row)
     } else {
-        state_cylinder = {0, this->getSize().Y() / 2, -m_radius};
+        state_cylinder = {0, this->getSize().Y() / 2, m_radius};
         direction_cylinder = {1, 0, 0}; // cylinder axis along x (column)
     }
-
+    LOG(INFO) << " st,dt,sc,dc = " << state_track << ", " << direction_track << ", " << state_cylinder << ", "<< direction_cylinder;
     get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
 
     // Select solution according to bending direction
@@ -155,7 +218,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     localBentIntercept = ROOT::Math::XYZPoint(state_track.x() + param * direction_track.x(),
                                               state_track.y() + param * direction_track.y(),
                                               state_track.z() + param * direction_track.z());
-
+    LOG(INFO) << " localBentIntercept = " << localBentIntercept;
     return toGlobal() * localBentIntercept;
 }
 
@@ -184,13 +247,14 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
             2 * ((component == 0 ? state_track.Y() * state_cylinder.Y() : state_track.X() * state_cylinder.X()) +
                  state_track.Z() * state_cylinder.Z()) -
             (m_radius * m_radius);
-
     // Check if the quadratic equation has a solution
     double discriminant = beta * beta - 4 * alpha * gamma;
+    LOG(INFO) << " alpha,beta,gamma, disc = " << alpha << ", " << beta << ", " << gamma << ", " << discriminant;
+
     if(discriminant < 0 || alpha == 0) { // must have real solution
         return;
     }
-
+    
     // Solve equation
     result.setParams((-beta + sqrt(discriminant)) / (2 * alpha), (-beta - sqrt(discriminant)) / (2 * alpha));
     return;

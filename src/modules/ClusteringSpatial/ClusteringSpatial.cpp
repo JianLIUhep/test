@@ -257,10 +257,10 @@ void ClusteringSpatial::calculateClusterCentre(Cluster* cluster) {
     cluster->setRow(row);
     cluster->setColumn(column);
     cluster->setCharge(charge);
-
+    LOG(INFO) << " col, row ref = " << column << " , " << row;
     // Set uncertainty on position from intrinstic detector spatial resolution:
-    cluster->setError(m_detector->getSpatialResolution());
-    cluster->setErrorMatrixGlobal(m_detector->getSpatialResolutionMatrixGlobal());
+    cluster->setError(m_detector->getSpatialResolution(column,row));
+    cluster->setErrorMatrixGlobal(m_detector->getSpatialResolutionMatrixGlobal(column,row));
 
     cluster->setDetectorID(detectorID);
     cluster->setClusterCentre(positionGlobal);

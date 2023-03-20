@@ -135,12 +135,16 @@ void StraightLineTrack::fit() {
         Eigen::Vector2d pos(x, y);
         auto errorMatrix = cluster->errorMatrixGlobal();
         Eigen::Matrix2d V;
-        V << errorMatrix(0, 0), errorMatrix(0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
+
+        V << errorMatrix(0,0), errorMatrix (0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
+        //if(cluster->getDetectorID()=="ALPIDE_3") V << errorMatrix(2, 2), errorMatrix(0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
         Eigen::Matrix<double, 2, 4> C;
         C << 1., z, 0., 0., 0., 0., 1., z;
 
         // Fill the matrices
         if(fabs(V.determinant()) < std::numeric_limits<double>::epsilon()) {
+            std::cout << "V = \n" << V << std::endl;
+            std::cout << "determinant of V = " << V.determinant() << std::endl;
             throw TrackFitError(typeid(this), "Error matrix inversion in straight line fit failed");
         }
         vec += C.transpose() * V.inverse() * pos;

@@ -227,13 +227,13 @@ namespace corryvreckan {
          * @return Intrinsic spatial resolution in X and Y
          * @todo: this is designed for PixelDetector, find a proper interface for other Detector type
          */
-        virtual XYVector getSpatialResolution() const = 0;
+        virtual XYVector getSpatialResolution([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) = 0;
 
         /**
          * @brief Get intrinsic spatial resolution in global coordinates of the detector
          * @return Intrinsic spatial resolution in global X and Y
          */
-        virtual TMatrixD getSpatialResolutionMatrixGlobal() const = 0;
+        virtual TMatrixD getSpatialResolutionMatrixGlobal([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) = 0;
 
         /**
          * @brief Get number of pixels in x and y

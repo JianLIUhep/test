@@ -54,6 +54,10 @@ namespace corryvreckan {
          */
         BentPixelDetector(const Configuration& config);
 
+        XYVector getSpatialResolution(double column, double row) override;
+
+        TMatrixD getSpatialResolutionMatrixGlobal(double column, double row) override;
+
         // Function to get global intercept with a track
         PositionVector3D<Cartesian3D<double>> getIntercept(const Track* track) const override;
 
@@ -138,6 +142,7 @@ namespace corryvreckan {
         // bent geometry configuration parameters
         double m_radius;
         double m_rotate_by;
+        PositionVector3D<Cartesian3D<double>> m_local;
     };
 } // namespace corryvreckan
 

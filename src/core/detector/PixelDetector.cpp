@@ -38,9 +38,18 @@ PixelDetector::PixelDetector(const Configuration& config) : Detector(config) {
     TMatrixD locToGlob(3, 3), globToLoc(3, 3);
     errorMatrix(0, 0) = m_spatial_resolution.x() * m_spatial_resolution.x();
     errorMatrix(1, 1) = m_spatial_resolution.y() * m_spatial_resolution.y();
+    LOG(INFO) << "errmat = ";
+    errorMatrix.Print();
+    LOG(INFO) << "l2g = " << alignment_->local2global();
+    LOG(INFO) << "l2g rot = " << alignment_->local2global().Rotation();
+    LOG(INFO) << "g2l = " << alignment_->global2local();
+    LOG(INFO) << "g2l rot = " << alignment_->global2local().Rotation();
     alignment_->local2global().Rotation().GetRotationMatrix(locToGlob);
     alignment_->global2local().Rotation().GetRotationMatrix(globToLoc);
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
+    LOG(INFO) << "m_sp_res_matrix_global = ";
+    m_spatial_resolution_matrix_global.Print();
+
 }
 
 void PixelDetector::build_axes(const Configuration& config) {

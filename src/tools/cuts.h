@@ -39,6 +39,7 @@ namespace corryvreckan {
         if(n.find("spatial") == std::string::npos) {
             throw ConfigurationError();
         }
+        // return d->getSpatialResolution(d->getColumn(column,row);
         return d->getSpatialResolution();
     }
 
