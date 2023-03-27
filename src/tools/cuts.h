@@ -19,8 +19,8 @@
 #include "core/detector/Detector.hpp"
 
 namespace corryvreckan {
-
     template <typename T> inline T get_resolution(const std::string&, const std::shared_ptr<Detector>&) {
+    // template <typename T> inline T get_resolution(const std::string&, const std::shared_ptr<Detector>&, const double, const double) {
         throw ConfigurationError();
     }
     /**
@@ -39,8 +39,13 @@ namespace corryvreckan {
         if(n.find("spatial") == std::string::npos) {
             throw ConfigurationError();
         }
-        // return d->getSpatialResolution(d->getColumn(column,row);
         return d->getSpatialResolution();
+    }
+    template <> inline XYZVector get_resolution<XYZVector>(const std::string& n, const std::shared_ptr<Detector>& d, const double column, const double row) {
+        if(n.find("spatial") == std::string::npos) {
+            throw ConfigurationError();
+        }
+        return d->getSpatialResolution(column, row);
     }
 
     /**
@@ -64,6 +69,7 @@ namespace corryvreckan {
             return config.get<T>(absolute);
         } else {
             try {
+                // return get_resolution<T>(name, detector, column, row) * config.get<double>(relative);
                 return get_resolution<T>(name, detector) * config.get<double>(relative);
             } catch(ConfigurationError&) {
                 throw InvalidValueError(config, relative, "key doesn't match requested resolution type");
@@ -85,6 +91,7 @@ namespace corryvreckan {
                                                                 const std::vector<std::shared_ptr<Detector>>& detectors) {
         std::map<std::shared_ptr<Detector>, T> cut_map;
         for(const auto& detector : detectors) {
+            // cut_map[detector] = calculate_cut<T>(name, config, detector, column, row);
             cut_map[detector] = calculate_cut<T>(name, config, detector);
         }
         return cut_map;
