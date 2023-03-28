@@ -134,7 +134,8 @@ void AlignmentTrackChi2::MinimiseTrackChi2(Int_t&, Double_t*, Double_t& result, 
             auto positionLocal = trackCluster->local();
             auto positionGlobal = AlignmentTrackChi2::globalDetector->localToGlobal(positionLocal);
             trackCluster->setClusterCentre(positionGlobal);
-            trackCluster->setErrorMatrixGlobal(AlignmentTrackChi2::globalDetector->getSpatialResolutionMatrixGlobal());
+            trackCluster->setErrorMatrixGlobal(AlignmentTrackChi2::globalDetector->getSpatialResolutionMatrixGlobal(
+                trackCluster->column(), trackCluster->row()));
             LOG(DEBUG) << "Updating cluster with corrected global position for detector "
                        << AlignmentTrackChi2::globalDetector->getName();
         }
@@ -150,8 +151,14 @@ void AlignmentTrackChi2::MinimiseTrackChi2(Int_t&, Double_t*, Double_t& result, 
             fitIterations = 0;
         }
 
-        // Add the new chi2
-        return track->getChi2();
+        // check if the fit has failed
+        if(!track->isFitted()) {
+            LOG(WARNING) << "Refit failed - track will be discarded for this alignment step ";
+            return 0.0;
+        } else {
+            // add the new chi2
+            return track->getChi2();
+        }
     };
 
     // Loop over all tracks
