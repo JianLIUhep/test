@@ -94,7 +94,7 @@ namespace corryvreckan {
         void setClusterCentreLocal(ROOT::Math::XYZPoint local) { m_local = std::move(local); }
         void setErrorX(double error) { m_error.SetX(error); }
         void setErrorY(double error) { m_error.SetY(error); }
-        void setError(ROOT::Math::XYZVector error) { m_error = std::move(error); }
+        void setError(ROOT::Math::XYVector error) { m_error = std::move(error); }
         void setErrorMatrixGlobal(TMatrixD errorMatrix) { m_error_matrix_global = std::move(errorMatrix); }
 
         /**

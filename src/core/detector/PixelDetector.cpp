@@ -39,7 +39,7 @@ PixelDetector::PixelDetector(const Configuration& config) : Detector(config) {
     errorMatrix(0, 0) = m_spatial_resolution.x() * m_spatial_resolution.x();
     errorMatrix(1, 1) = m_spatial_resolution.y() * m_spatial_resolution.y();
     LOG(INFO) << "errmat = ";
-    errorMatrix.Print();
+    // errorMatrix.Print();
     LOG(INFO) << "l2g = " << alignment_->local2global();
     LOG(INFO) << "l2g rot = " << alignment_->local2global().Rotation();
     LOG(INFO) << "g2l = " << alignment_->global2local();
@@ -48,7 +48,7 @@ PixelDetector::PixelDetector(const Configuration& config) : Detector(config) {
     alignment_->global2local().Rotation().GetRotationMatrix(globToLoc);
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
     LOG(INFO) << "m_sp_res_matrix_global = ";
-    m_spatial_resolution_matrix_global.Print();
+    // m_spatial_resolution_matrix_global.Print();
 
 }
 
@@ -68,7 +68,7 @@ void PixelDetector::build_axes(const Configuration& config) {
     }
 
     // Intrinsic spatial resolution, defaults to pitch/sqrt(12):
-    m_spatial_resolution = config.get<ROOT::Math::XYZVector>("spatial_resolution");
+    m_spatial_resolution = config.get<ROOT::Math::XYVector>("spatial_resolution");
     if(!config.has("spatial_resolution")) {
         LOG(WARNING) << "Spatial resolution for detector '" << m_detectorName << "' not set." << std::endl
                      << "Using pitch/sqrt(12) as default";

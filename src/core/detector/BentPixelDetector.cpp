@@ -103,7 +103,7 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
 
 
 // no need to implement as everything is in build_axes (See l78, l62 in pxdet.cpp)?
-XYZVector BentPixelDetector::getSpatialResolution(double column, double row) {
+XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) {
 
     double theta = 0.0;
     if(m_bent_axis == BentAxis::COLUMN) {
@@ -112,16 +112,23 @@ XYZVector BentPixelDetector::getSpatialResolution(double column, double row) {
     else {
         theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
     }
-
+    LOG(INFO) << "getSpatialResolutionXYZ: theta = " << theta;
     XYZVector sp_reso{m_spatial_resolution.x(), m_spatial_resolution.y(), m_spatial_resolution.z()};
 
     sp_reso.SetX(m_spatial_resolution.x() * cos (theta)); 
     sp_reso.SetZ(m_spatial_resolution.x() * sin (theta));
     // m_spatial_resolution.SetY(m_spatial_resolution.y() * sin (theta));
-    LOG(INFO) << "B: m_sp_res X  = " << sp_reso.x();
-    LOG(INFO) << "B: m_sp_res Y  = " << sp_reso.y();
-    LOG(INFO) << "B: m_sp_res Z  = " << sp_reso.z();
+    LOG(INFO) << "getSpatialResolutionXYZ: sp_reso X  = " << sp_reso.x();
+    LOG(INFO) << "getSpatialResolutionXYZ: sp_reso Y  = " << sp_reso.y();
+    LOG(INFO) << "getSpatialResolutionXYZ: sp_reso Z  = " << sp_reso.z();
     return sp_reso;
+}
+
+XYVector BentPixelDetector::getSpatialResolution(double column, double row) {
+    XYZVector res = this->getSpatialResolutionXYZ(column,row);
+    LOG(INFO) << "getSpatialResolution: m_sp_res X  = " << res.x();
+    LOG(INFO) << "getSpatialResolution: m_sp_res Y  = " << res.y();
+    return XYVector(res.x(), res.y());
 }
 
 TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, double row) {
@@ -131,11 +138,11 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
     double theta = 0.0;
     if(m_bent_axis == BentAxis::COLUMN) {
         theta = m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.) / (m_radius);
-        LOG(INFO) << "B: rad = " << m_radius;
-        LOG(INFO) << "B: col = " << column;
-        std::cout << "COLUMN = " << column << std::endl;
-        LOG(INFO) << "B: theta down = " << theta;
-        LOG(INFO) << "B: Spatial res = " << getSpatialResolution(column,row);
+        LOG(INFO) << "getSpatialResolutionMatrixGlobal: rad = " << m_radius;
+        LOG(INFO) << "getSpatialResolutionMatrixGlobal: col = " << column;
+        // std::cout << "COLUMN = " << column << std::endl;
+        LOG(INFO) << "getSpatialResolutionMatrixGlobal: theta  = " << theta;
+        LOG(INFO) << "getSpatialResolutionMatrixGlobal: getSpatialResolution(column,row) = " << getSpatialResolution(column,row);
     }
     else {
         theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
@@ -145,18 +152,18 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
     // errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * sin (theta);
     errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x();
 
-    LOG(INFO) << "B: errmat = ";
-    errorMatrix.Print();
-    // LOG(WARNING) << "B: l2g = " << alignment_->local2global();
-    // LOG(WARNING) << "B: l2g rot = " << alignment_->local2global().Rotation();
-    // LOG(WARNING) << "B: g2l = " << alignment_->global2local();
-    // LOG(WARNING) << "B: g2l rot = " << alignment_->global2local().Rotation();
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: errorMatrix = ";
+    //errorMatrix.Print();
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g = " << alignment_->local2global();
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g rot = " << alignment_->local2global().Rotation();
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l = " << alignment_->global2local();
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l rot = " << alignment_->global2local().Rotation();
     alignment_->local2global().Rotation().GetRotationMatrix(locToGlob);
     alignment_->global2local().Rotation().GetRotationMatrix(globToLoc);
 
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
-    LOG(INFO) << "B: m_spatial_resolution_matrix_global:";
-    m_spatial_resolution_matrix_global.Print();
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: m_spatial_resolution_matrix_global:";
+    //m_spatial_resolution_matrix_global.Print();
 
     return m_spatial_resolution_matrix_global;
 }
@@ -165,9 +172,10 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalPosition(double
     ROOT::Math::RhoZPhiVector local;
     // (almost) almighty  cylinders - define "zero degree" at center of chip
     if(m_bent_axis == BentAxis::COLUMN) {
-        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(m_radius));
-        //LOG(INFO) << "col, row = " << column << "," << row ;
-        //LOG(INFO) << "local = " << local;
+        // eversion possible by change or sign of the radius; but.. does it matter?
+        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(-m_radius));
+        LOG(INFO) << "getLocalPosition: col, row = " << column << "," << row ;
+        LOG(INFO) << "getLocalPosition: local = " << local;
     } else {
         // not yet corrected; should just be a swap
         local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.))/(-m_radius), m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.));

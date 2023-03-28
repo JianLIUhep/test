@@ -19,8 +19,8 @@
 #include "core/detector/Detector.hpp"
 
 namespace corryvreckan {
+
     template <typename T> inline T get_resolution(const std::string&, const std::shared_ptr<Detector>&) {
-    // template <typename T> inline T get_resolution(const std::string&, const std::shared_ptr<Detector>&, const double, const double) {
         throw ConfigurationError();
     }
     /**
@@ -40,12 +40,6 @@ namespace corryvreckan {
             throw ConfigurationError();
         }
         return d->getSpatialResolution();
-    }
-    template <> inline XYZVector get_resolution<XYZVector>(const std::string& n, const std::shared_ptr<Detector>& d, const double column, const double row) {
-        if(n.find("spatial") == std::string::npos) {
-            throw ConfigurationError();
-        }
-        return d->getSpatialResolution(column, row);
     }
 
     /**
