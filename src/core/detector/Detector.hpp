@@ -224,16 +224,20 @@ namespace corryvreckan {
 
         /**
          * @brief Get intrinsic spatial resolution of the detector
+         * @param column Column (x-) index of the pixel to calculate the spatial resolution from
+         * @param row Row (y-) index of the pixel to calculate the spatial resolution from
          * @return Intrinsic spatial resolution in X and Y
          * @todo: this is designed for PixelDetector, find a proper interface for other Detector type
          */
-        virtual XYZVector getSpatialResolution([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) = 0;
+        virtual XYVector getSpatialResolution(double column = 0, double row = 0) const = 0;
 
         /**
          * @brief Get intrinsic spatial resolution in global coordinates of the detector
+         * @param column Column (x-) index of the pixel to calculate the spatial resolution from
+         * @param row Row (y-) index of the pixel to calculate the spatial resolution from
          * @return Intrinsic spatial resolution in global X and Y
          */
-        virtual TMatrixD getSpatialResolutionMatrixGlobal([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) = 0;
+        virtual TMatrixD getSpatialResolutionMatrixGlobal(double column = 0, double row = 0) const = 0;
 
         /**
          * @brief Get number of pixels in x and y
