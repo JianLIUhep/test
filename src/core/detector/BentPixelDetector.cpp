@@ -113,7 +113,9 @@ XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) 
         theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
     }
     LOG(INFO) << "getSpatialResolutionXYZ: theta = " << theta;
-    XYZVector sp_reso{m_spatial_resolution.x(), m_spatial_resolution.y(), m_spatial_resolution.z()};
+    LOG(INFO) << "getSpatialResolutionXYZ: col, row = " << column << "," << row ;
+    LOG(INFO) << "getSpatialResolutionXYZ: m_spatial_resolution = " << m_spatial_resolution;
+    XYZVector sp_reso{m_spatial_resolution.x(), m_spatial_resolution.y(), m_spatial_resolution.x()};
 
     sp_reso.SetX(m_spatial_resolution.x() * cos (theta)); 
     sp_reso.SetZ(m_spatial_resolution.x() * sin (theta));
