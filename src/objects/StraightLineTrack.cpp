@@ -13,6 +13,7 @@
 #include "Eigen/Dense"
 #include "Track.hpp"
 #include "exceptions.h"
+#include "core/utils/log.h"
 
 using namespace corryvreckan;
 
@@ -22,8 +23,12 @@ ROOT::Math::XYPoint StraightLineTrack::distance(const Cluster* cluster) const {
         throw MissingReferenceException(typeid(*this), typeid(Plane));
     }
     auto trackIntercept = get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
+    LOG(INFO) << "slt: DETID = " << cluster->getDetectorID();
+    LOG(INFO) << "slt: trackIntercept = " << trackIntercept;
 
     auto dist = cluster->local() - trackIntercept;
+    LOG(INFO) << "slt: dist = " << dist;
+    LOG(INFO) << "slt: dist^2 = " << ROOT::Math::XYPoint(dist.x(), dist.y());
 
     // Return the distance^2
     return ROOT::Math::XYPoint(dist.x(), dist.y());
@@ -43,9 +48,25 @@ ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) 
     ROOT::Math::XYZPoint origin = toGlobal.Translation() * ROOT::Math::XYZPoint(0, 0, 0);
 
     ROOT::Math::XYZVector distance = m_state - origin;
-    double pathLength = -distance.Dot(planeN) / m_direction.Dot(planeN);
+    double pathLength;
+    if (detectorID == "ALPIDE_3") {
+        pathLength = -distance.Dot(planeN) / m_direction.Dot(planeN.Unit());
+    } else {
+        pathLength = -distance.Dot(planeN) / m_direction.Dot(planeN);
+    }
     ROOT::Math::XYZPoint position = m_state + pathLength * m_direction;
-
+    LOG(INFO) << "ID = " << detectorID << ", "
+          << "planeU = " << planeU << ", "
+          << "planeV = " << planeV << ", "
+          << "planeN = " << planeN;
+    LOG(INFO) << "origin = " << origin;
+    LOG(INFO) << "distance = " << distance;
+    LOG(INFO) << "pathLength = " << pathLength;
+    LOG(INFO) << "position = " << position;
+    LOG(INFO) << "m_direction = " << m_direction;
+    LOG(INFO) << "-distance.Dot(planeN) = " << -distance.Dot(planeN);
+    LOG(INFO) << "m_direction.Dot(planeN) = " << m_direction.Dot(planeN);
+    LOG(INFO) << "m_direction.Dot(planeN.Unit()) = " << m_direction.Dot(planeN.Unit());
     return position;
 }
 
@@ -174,6 +195,7 @@ void StraightLineTrack::fit() {
 }
 
 ROOT::Math::XYZPoint StraightLineTrack::getIntercept(double z) const {
+    LOG(INFO) << " slt: intercept = " << m_state + m_direction * z;
     return m_state + m_direction * z;
 }
 

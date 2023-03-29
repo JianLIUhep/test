@@ -257,9 +257,11 @@ void ClusteringSpatial::calculateClusterCentre(Cluster* cluster) {
 
     // Create object with local cluster position
     auto positionLocal = m_detector->getLocalPosition(column, row);
+    LOG(INFO) << "clsp: local = " << positionLocal;
 
     // Calculate global cluster position
     auto positionGlobal = m_detector->localToGlobal(positionLocal);
+    LOG(INFO) << "clsp: glob = " << positionGlobal;
 
     // Set the cluster parameters
     cluster->setRow(row);
