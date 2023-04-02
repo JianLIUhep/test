@@ -155,7 +155,7 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
     errorMatrix(2, 2) = getSpatialResolutionXYZ(column,row).z() * getSpatialResolutionXYZ(column,row).z();
 
     LOG(WARNING) << "getSpatialResolutionMatrixGlobal: errorMatrix = ";
-    errorMatrix.Print();
+    //errorMatrix.Print();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g = " << alignment_->local2global();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g rot = " << alignment_->local2global().Rotation();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l = " << alignment_->global2local();
@@ -165,7 +165,7 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
 
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
     LOG(WARNING) << "getSpatialResolutionMatrixGlobal: m_spatial_resolution_matrix_global:";
-    m_spatial_resolution_matrix_global.Print();
+    //m_spatial_resolution_matrix_global.Print();
 
     return m_spatial_resolution_matrix_global;
 }

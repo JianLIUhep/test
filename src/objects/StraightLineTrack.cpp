@@ -43,29 +43,42 @@ ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) 
         throw MissingReferenceException(typeid(*this), typeid(Plane));
     }
     auto toGlobal = get_plane(detectorID)->getToGlobal();
+    LOG(INFO) << " toglobal = " << toGlobal;
     ROOT::Math::XYZVector planeU, planeV, planeN;
     toGlobal.Rotation().GetComponents(planeU, planeV, planeN);
     ROOT::Math::XYZPoint origin = toGlobal.Translation() * ROOT::Math::XYZPoint(0, 0, 0);
 
     ROOT::Math::XYZVector distance = m_state - origin;
     double pathLength;
+    pathLength = -distance.Dot(planeN) / m_direction.Dot(planeN);
+
     if (detectorID == "ALPIDE_3") {
-        pathLength = -distance.Dot(planeN) / m_direction.Dot(planeN.Unit());
-    } else {
-        pathLength = -distance.Dot(planeN) / m_direction.Dot(planeN);
+        ROOT::Math::XYZPoint origin_cyl{0.,0.,18.11};
+        ROOT::Math::XYZVector blabla = m_state - origin_cyl;
+        LOG(INFO) << " blabla = " << blabla;
+        pathLength = -distance.Dot(blabla) / m_direction.Dot(blabla);
     }
     ROOT::Math::XYZPoint position = m_state + pathLength * m_direction;
+
+    // testing shit
+    ROOT::Math::XYZVector proj = m_direction - (m_direction.Dot(planeN) / planeN.Mag2()) * planeN;
+    LOG(INFO) << "proj.Dot(planeN) = " << proj.Dot(planeN);
+    double d2;
+    d2 = -distance.Dot(planeN) / proj.Dot(planeN);
+    LOG(INFO) << "d2 = " << d2;
     LOG(INFO) << "ID = " << detectorID << ", "
           << "planeU = " << planeU << ", "
           << "planeV = " << planeV << ", "
           << "planeN = " << planeN;
     LOG(INFO) << "origin = " << origin;
+    LOG(INFO) << "m_state = " << m_state;
     LOG(INFO) << "distance = " << distance;
     LOG(INFO) << "pathLength = " << pathLength;
     LOG(INFO) << "position = " << position;
     LOG(INFO) << "m_direction = " << m_direction;
     LOG(INFO) << "-distance.Dot(planeN) = " << -distance.Dot(planeN);
     LOG(INFO) << "m_direction.Dot(planeN) = " << m_direction.Dot(planeN);
+    LOG(INFO) << "planeN.Unit() = " << planeN.Unit();
     LOG(INFO) << "m_direction.Dot(planeN.Unit()) = " << m_direction.Dot(planeN.Unit());
     return position;
 }
@@ -122,7 +135,8 @@ void StraightLineTrack::calculateResiduals() {
 }
 
 double StraightLineTrack::operator()(const double* parameters) {
-
+    LOG(WARNING) << "I am here: operator()!";
+    LOG(INFO) << "parameters: "<< parameters;
     // Update the StraightLineTrack gradient and intercept
     this->m_direction.SetX(parameters[0]);
     this->m_state.SetX(parameters[1]);
