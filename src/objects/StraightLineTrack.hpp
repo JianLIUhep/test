@@ -50,6 +50,8 @@ namespace corryvreckan {
          */
         ROOT::Math::XYZPoint getState(const std::string& detectorID) const override;
 
+        ROOT::Math::XYZPoint get_m_state() const override;
+
         /**
          * @brief Get the track direction at a detector
          * @param detectorID Name of detector

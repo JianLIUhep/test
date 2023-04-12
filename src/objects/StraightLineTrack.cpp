@@ -18,7 +18,7 @@
 using namespace corryvreckan;
 
 ROOT::Math::XYPoint StraightLineTrack::distance(const Cluster* cluster) const {
-
+    LOG(WARNING) << "I am here: distance()!";
     if(get_plane(cluster->detectorID()) == nullptr) {
         throw MissingReferenceException(typeid(*this), typeid(Plane));
     }
@@ -35,15 +35,20 @@ ROOT::Math::XYPoint StraightLineTrack::distance(const Cluster* cluster) const {
 }
 
 ROOT::Math::XYPoint StraightLineTrack::getKinkAt(const std::string&) const {
+    LOG(WARNING) << "I am here: getKinkAt()!";
     return ROOT::Math::XYPoint(0, 0);
 }
 
+ROOT::Math::XYZPoint StraightLineTrack::get_m_state() const {
+    return m_state;
+}
+
 ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) const {
+    LOG(WARNING) << "I am here: getState()!";
     if(get_plane(detectorID) == nullptr) {
         throw MissingReferenceException(typeid(*this), typeid(Plane));
     }
     auto toGlobal = get_plane(detectorID)->getToGlobal();
-    LOG(INFO) << " toglobal = " << toGlobal;
     ROOT::Math::XYZVector planeU, planeV, planeN;
     toGlobal.Rotation().GetComponents(planeU, planeV, planeN);
     ROOT::Math::XYZPoint origin = toGlobal.Translation() * ROOT::Math::XYZPoint(0, 0, 0);
@@ -52,46 +57,44 @@ ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) 
     double pathLength;
     pathLength = -distance.Dot(planeN) / m_direction.Dot(planeN);
 
-    if (detectorID == "ALPIDE_3") {
-        ROOT::Math::XYZPoint origin_cyl{0.,0.,18.11};
-        ROOT::Math::XYZVector blabla = m_state - origin_cyl;
-        LOG(INFO) << " blabla = " << blabla;
-        pathLength = -distance.Dot(blabla) / m_direction.Dot(blabla);
-    }
+    // if (detectorID == "ALPIDE_3") {
+    //     ROOT::Math::XYZPoint origin_cyl{0.,0.,18.11};
+    //     ROOT::Math::XYZVector blabla = m_state - origin_cyl;
+    //     LOG(INFO) << " blabla = " << blabla;
+    //     pathLength = -distance.Dot(blabla) / m_direction.Dot(blabla);
+    // }
     ROOT::Math::XYZPoint position = m_state + pathLength * m_direction;
 
-    // testing shit
-    ROOT::Math::XYZVector proj = m_direction - (m_direction.Dot(planeN) / planeN.Mag2()) * planeN;
-    LOG(INFO) << "proj.Dot(planeN) = " << proj.Dot(planeN);
-    double d2;
-    d2 = -distance.Dot(planeN) / proj.Dot(planeN);
-    LOG(INFO) << "d2 = " << d2;
-    LOG(INFO) << "ID = " << detectorID << ", "
-          << "planeU = " << planeU << ", "
+    LOG(WARNING) << " DETECTOR: " << detectorID;
+    LOG(INFO) << " toglobal = " << toGlobal;
+    LOG(INFO) << "planeU = " << planeU << ", "
           << "planeV = " << planeV << ", "
           << "planeN = " << planeN;
     LOG(INFO) << "origin = " << origin;
     LOG(INFO) << "m_state = " << m_state;
     LOG(INFO) << "distance = " << distance;
     LOG(INFO) << "pathLength = " << pathLength;
-    LOG(INFO) << "position = " << position;
+    LOG(WARNING) << "position = " << position;
     LOG(INFO) << "m_direction = " << m_direction;
     LOG(INFO) << "-distance.Dot(planeN) = " << -distance.Dot(planeN);
     LOG(INFO) << "m_direction.Dot(planeN) = " << m_direction.Dot(planeN);
-    LOG(INFO) << "planeN.Unit() = " << planeN.Unit();
+    LOG(INFO) << "pathLength * m_direction = " << pathLength * m_direction;
     LOG(INFO) << "m_direction.Dot(planeN.Unit()) = " << m_direction.Dot(planeN.Unit());
     return position;
 }
 
 ROOT::Math::XYZVector StraightLineTrack::getDirection(const std::string&) const {
+    LOG(WARNING) << "I am here: getDirection()!";
     return m_direction;
 }
 
 ROOT::Math::XYZVector StraightLineTrack::getDirection(const double&) const {
+    LOG(WARNING) << "I am here: getDirection2()!";
     return m_direction;
 }
 
 void StraightLineTrack::calculateChi2() {
+    LOG(WARNING) << "I am here: calculateChi2()!";
 
     // Get the number of clusters
     // We do have a 2-dimensional offset(x_0,y_0) and slope (dx,dy). Each hit provides two measurements.
@@ -123,6 +126,7 @@ void StraightLineTrack::calculateChi2() {
 }
 
 void StraightLineTrack::calculateResiduals() {
+    LOG(WARNING) << "I am here: calculateResiduals()!";
     for(const auto& c : track_clusters_) {
         auto* cluster = c.get();
         if(get_plane(cluster->detectorID()) == nullptr) {
@@ -151,7 +155,7 @@ double StraightLineTrack::operator()(const double* parameters) {
 }
 
 void StraightLineTrack::fit() {
-
+    LOG(WARNING) << "I am here: fit()!";
     isFitted_ = false;
     Eigen::Matrix4d mat(Eigen::Matrix4d::Zero());
     Eigen::Vector4d vec(Eigen::Vector4d::Zero());
@@ -167,6 +171,7 @@ void StraightLineTrack::fit() {
         double x = cluster->global().x();
         double y = cluster->global().y();
         double z = cluster->global().z();
+        // LOG(WARNING) << " CLUSTER x,y,z = " << x << ", " << y << ", " << z;
         Eigen::Vector2d pos(x, y);
         auto errorMatrix = cluster->errorMatrixGlobal();
         Eigen::Matrix2d V;
@@ -174,7 +179,11 @@ void StraightLineTrack::fit() {
         V << errorMatrix(0,0), errorMatrix (0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
         //if(cluster->getDetectorID()=="ALPIDE_3") V << errorMatrix(2, 2), errorMatrix(0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
         Eigen::Matrix<double, 2, 4> C;
+        // C relates the position of a cluster in space to the track parameters
+        // has two ros; so z is always fixed; do I need to change this?? otherwise it's always perpendicular
         C << 1., z, 0., 0., 0., 0., 1., z;
+        // LOG(WARNING) << " C = " << C;
+        // LOG(WARNING) << " V = " << V;
 
         // Fill the matrices
         if(fabs(V.determinant()) < std::numeric_limits<double>::epsilon()) {
@@ -185,6 +194,8 @@ void StraightLineTrack::fit() {
         vec += C.transpose() * V.inverse() * pos;
         mat += C.transpose() * V.inverse() * C;
     }
+        // LOG(WARNING) << "mat f: " << mat;
+        // LOG(WARNING) << " vec f: " << vec;
 
     // Check for singularities.
     if(fabs(mat.determinant()) < std::numeric_limits<double>::epsilon()) {
@@ -192,7 +203,7 @@ void StraightLineTrack::fit() {
     }
     // Get the StraightLineTrack parameters
     Eigen::Vector4d res = mat.inverse() * vec;
-
+    // LOG(WARNING) << "res = " << res;
     // Set the StraightLineTrack parameters
     m_state.SetX(res(0));
     m_state.SetY(res(2));
@@ -209,7 +220,8 @@ void StraightLineTrack::fit() {
 }
 
 ROOT::Math::XYZPoint StraightLineTrack::getIntercept(double z) const {
-    LOG(INFO) << " slt: intercept = " << m_state + m_direction * z;
+    LOG(WARNING) << "I am here: getIntercept()!";
+    LOG(WARNING) << " slt: intercept = " << m_state + m_direction * z;
     return m_state + m_direction * z;
 }
 

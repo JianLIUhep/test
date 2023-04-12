@@ -211,6 +211,10 @@ XYZPoint Track::getState(const std::string&) const {
     return ROOT::Math::XYZPoint(0.0, 0.0, 0.0);
 }
 
+XYZPoint Track::get_m_state() const {
+    return ROOT::Math::XYZPoint(0.0, 0.0, 0.0);
+}
+
 XYZVector Track::getDirection(const std::string&) const {
     return ROOT::Math::XYZVector(0.0, 0.0, 0.0);
 }

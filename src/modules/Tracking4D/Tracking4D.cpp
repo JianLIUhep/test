@@ -437,8 +437,13 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
 
                     // Calculate the distance to the previous plane's cluster/intercept
                     double distanceX = interceptX - newCluster->local().x();
+                    LOG(INFO) << "interceptX = " << interceptX;
+                    LOG(INFO) << "newCluster->local().x() = " << newCluster->local().x();
+                    LOG(INFO) << "distX = " << distanceX;
                     double distanceY = interceptY - newCluster->local().y();
+                    LOG(INFO) << "distY = " << distanceY;
                     double distance = sqrt(distanceX * distanceX + distanceY * distanceY);
+                    LOG(INFO) << "distancedistance = " << distance;
 
                     // Check if newCluster lies within ellipse defined by spatial cuts around intercept,
                     // following this example:
