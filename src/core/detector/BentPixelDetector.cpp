@@ -169,13 +169,13 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g = " << alignment_->local2global();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g rot = " << alignment_->local2global().Rotation();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l = " << alignment_->global2local();
-    LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l rot = " << alignment_->global2local().Rotation();
+    LOG(WARNING) << "getSpatialResolutionMatrixGlobal: g2l rot = " << alignment_->global2local().Rotation();
     alignment_->local2global().Rotation().GetRotationMatrix(locToGlob);
     alignment_->global2local().Rotation().GetRotationMatrix(globToLoc);
 
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
     LOG(WARNING) << "getSpatialResolutionMatrixGlobal: m_spatial_resolution_matrix_global:";
-    m_spatial_resolution_matrix_global.Print();
+    //m_spatial_resolution_matrix_global.Print();
 
     return m_spatial_resolution_matrix_global;
 }
@@ -227,13 +227,15 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     DisplacementVector3D<Cartesian3D<double>> direction_cylinder;
 
     if(m_bent_axis == BentAxis::COLUMN) {
-        state_cylinder = {0, 0, -m_radius};
-        direction_cylinder = {0, 1, 0}; // cylinder axis along y (row)
+        state_cylinder = {0, 0, m_radius};
+        direction_cylinder = {0, 1, 0}; // TODO: need to take into account orientation with some local to global matrix?
+        LOG(WARNING) << "l2g rot = " << alignment_->local2global().Rotation();
+        LOG(WARNING) << "g2l rot = " << alignment_->global2local().Rotation();
     } else {
         state_cylinder = {0, this->getSize().Y() / 2, m_radius};
         direction_cylinder = {1, 0, 0}; // cylinder axis along x (column)
     }
-    LOG(INFO) << " st,dt,sc,dc = " << state_track << ", " << direction_track << ", " << state_cylinder << ", "<< direction_cylinder;
+    LOG(WARNING) << " st,dt,sc,dc = " << state_track << ", " << direction_track << ", " << state_cylinder << ", "<< direction_cylinder;
     get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
 
     // Select solution according to bending direction
@@ -245,7 +247,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
         localBentIntercept.SetCoordinates(inf, inf, inf);
         return localBentIntercept;
     }
-    auto param = (m_radius < 0) ? intercept_parameters.getParam1()
+    auto param = (m_radius > 0) ? intercept_parameters.getParam1()
                                 : intercept_parameters.getParam2(); // for negative radius select smaller solution
     localBentIntercept = ROOT::Math::XYZPoint(state_track.x() + param * direction_track.x(),
                                               state_track.y() + param * direction_track.y(),
@@ -281,7 +283,7 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
             (m_radius * m_radius);
     // Check if the quadratic equation has a solution
     double discriminant = beta * beta - 4 * alpha * gamma;
-    LOG(INFO) << " alpha,beta,gamma, disc = " << alpha << ", " << beta << ", " << gamma << ", " << discriminant;
+    LOG(WARNING) << " alpha,beta,gamma, disc = " << alpha << ", " << beta << ", " << gamma << ", " << discriminant;
 
     if(discriminant < 0 || alpha == 0) { // must have real solution
         return;
