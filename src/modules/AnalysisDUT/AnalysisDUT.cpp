@@ -806,6 +806,10 @@ StatusCode AnalysisDUT::run(const std::shared_ptr<Clipboard>& clipboard) {
         auto globalIntercept = m_detector->getIntercept(track.get());
         auto localIntercept = m_detector->globalToLocal(globalIntercept);
 
+        LOG(WARNING) << "globalIntercept = " << globalIntercept;
+        LOG(WARNING) << "localIntercept = " << localIntercept;
+
+
         // Fill correlation plots BEFORE applying any cuts:
         if(correlations_) {
             auto clusters = clipboard->getData<Cluster>(m_detector->getName());
@@ -821,7 +825,7 @@ StatusCode AnalysisDUT::run(const std::shared_ptr<Clipboard>& clipboard) {
         // Flags to select clusters and tracks
         bool has_associated_cluster = false;
         LOG(DEBUG) << "Looking at next track";
-
+        LOG(WARNING) << "chi2perdof = " << track->getChi2ndof();
         // Cut on the chi2/ndof
         if(track->getChi2ndof() > chi2_ndof_cut_) {
             LOG(DEBUG) << " - track discarded due to Chi2/ndof";

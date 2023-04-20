@@ -164,17 +164,17 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
     // errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * sin (theta);
     errorMatrix(2, 2) = getSpatialResolutionXYZ(column,row).z() * getSpatialResolutionXYZ(column,row).z();
 
-    LOG(WARNING) << "getSpatialResolutionMatrixGlobal: errorMatrix = ";
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: errorMatrix = ";
     //errorMatrix.Print();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g = " << alignment_->local2global();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g rot = " << alignment_->local2global().Rotation();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l = " << alignment_->global2local();
-    LOG(WARNING) << "getSpatialResolutionMatrixGlobal: g2l rot = " << alignment_->global2local().Rotation();
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l rot = " << alignment_->global2local().Rotation();
     alignment_->local2global().Rotation().GetRotationMatrix(locToGlob);
     alignment_->global2local().Rotation().GetRotationMatrix(globToLoc);
 
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
-    LOG(WARNING) << "getSpatialResolutionMatrixGlobal: m_spatial_resolution_matrix_global:";
+    LOG(INFO) << "getSpatialResolutionMatrixGlobal: m_spatial_resolution_matrix_global:";
     //m_spatial_resolution_matrix_global.Print();
 
     return m_spatial_resolution_matrix_global;
@@ -186,7 +186,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalPosition(double
     if(m_bent_axis == BentAxis::COLUMN) {
         // eversion possible by change or sign of the radius; but.. does it matter?
         local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(-m_radius));
-        LOG(INFO) << "getLocalPosition: col, row = " << column << "," << row ;
+        LOG(WARNING) << "getLocalPosition: col, row = " << column << "," << row ;
         LOG(INFO) << "getLocalPosition: local = " << local;
     } else {
         // not yet corrected; should just be a swap
@@ -212,7 +212,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     // Get and transform track state and direction
     PositionVector3D<Cartesian3D<double>> state_track = track->get_m_state();
     // DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
-    LOG(WARNING) << "m_State= " <<state_track;
+    LOG(INFO) << "m_State= " <<state_track;
     // Bring track to local (transformed) coordinate system
     // state_track = toLocal() * state_track;
     // direction_track = toLocal().Rotation() * direction_track;
@@ -227,33 +227,36 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     DisplacementVector3D<Cartesian3D<double>> direction_cylinder;
 
     if(m_bent_axis == BentAxis::COLUMN) {
-        state_cylinder = {0, 0, m_radius};
-        direction_cylinder = {0, 1, 0}; // TODO: need to take into account orientation with some local to global matrix?
-        LOG(WARNING) << "l2g rot = " << alignment_->local2global().Rotation();
-        LOG(WARNING) << "g2l rot = " << alignment_->global2local().Rotation();
+        double tr_x, tr_y, tr_z;
+        alignment_->local2global().Translation().GetComponents(tr_x, tr_y, tr_z);
+        state_cylinder = {tr_x, tr_y, m_radius};
+        direction_cylinder = {1, 0, 0}; // TODO: need to take into account orientation with some local to global matrix?
+        LOG(INFO) << "l2g rot = " << alignment_->local2global().Rotation();
+        LOG(INFO) << "g2l rot = " << alignment_->global2local().Rotation();
     } else {
         state_cylinder = {0, this->getSize().Y() / 2, m_radius};
         direction_cylinder = {1, 0, 0}; // cylinder axis along x (column)
     }
-    LOG(WARNING) << " st,dt,sc,dc = " << state_track << ", " << direction_track << ", " << state_cylinder << ", "<< direction_cylinder;
+    LOG(INFO) << " st,dt,sc,dc = " << state_track << ", " << direction_track << ", " << state_cylinder << ", "<< direction_cylinder;
     get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
 
     // Select solution according to bending direction
-    PositionVector3D<Cartesian3D<double>> localBentIntercept;
+    PositionVector3D<Cartesian3D<double>> bentIntercept;
     double inf = std::numeric_limits<double>::infinity();
 
     if(!intercept_parameters.isValid()) {
         LOG(INFO) << "No intercept of track and cylinder sensor found. Return intercept outside of sensor area.";
-        localBentIntercept.SetCoordinates(inf, inf, inf);
-        return localBentIntercept;
+        bentIntercept.SetCoordinates(inf, inf, inf);
+        return bentIntercept;
     }
     auto param = (m_radius > 0) ? intercept_parameters.getParam1()
                                 : intercept_parameters.getParam2(); // for negative radius select smaller solution
-    localBentIntercept = ROOT::Math::XYZPoint(state_track.x() + param * direction_track.x(),
+    bentIntercept = ROOT::Math::XYZPoint(state_track.x() + param * direction_track.x(),
                                               state_track.y() + param * direction_track.y(),
                                               state_track.z() + param * direction_track.z());
-    LOG(WARNING) << " localBentIntercept = " << localBentIntercept;
-    return toGlobal() * localBentIntercept;
+    LOG(INFO) << " bentIntercept = " << bentIntercept;
+    // return toGlobal() * bentIntercept;
+    return bentIntercept;
 }
 
 void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesian3D<double>>& state_track,
@@ -265,7 +268,7 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     double alpha;
     double beta;
     double gamma;
-
+    // TODO: rewrite using ROOT::Math::Dot(v1,v2) !!
     int component =
         (direction_cylinder.X() != 0 && direction_cylinder.Y() == 0)
             ? 0
@@ -275,11 +278,15 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     beta = 2 * (state_track - state_cylinder).Dot(direction_track) -
            2 * (component == 0 ? direction_track.X() * (state_track.X() - state_cylinder.X())
                                : direction_track.Y() * (state_track.Y() - state_cylinder.Y()));
-    gamma = state_track.Mag2() + state_cylinder.Mag2() -
-            (component == 0 ? state_track.X() * state_track.X() + state_cylinder.X() * state_cylinder.X()
-                            : state_track.Y() * state_track.Y() + state_cylinder.Y() * state_cylinder.Y()) -
-            2 * ((component == 0 ? state_track.Y() * state_cylinder.Y() : state_track.X() * state_cylinder.X()) +
-                 state_track.Z() * state_cylinder.Z()) -
+    // gamma = state_track.Mag2() + state_cylinder.Mag2() -
+    //         (component == 0 ? state_track.X() * state_track.X() + state_cylinder.X() * state_cylinder.X()
+    //                         : state_track.Y() * state_track.Y() + state_cylinder.Y() * state_cylinder.Y()) -
+    //         2 * ((component == 0 ? state_track.Y() * state_cylinder.Y() : state_track.X() * state_cylinder.X()) +
+    //              state_track.Z() * state_cylinder.Z()) -
+    //         (m_radius * m_radius);
+
+    gamma = (state_track-state_cylinder).Dot(state_track-state_cylinder) -
+            pow((state_track-state_cylinder).Dot(direction_cylinder),2) -
             (m_radius * m_radius);
     // Check if the quadratic equation has a solution
     double discriminant = beta * beta - 4 * alpha * gamma;
@@ -291,7 +298,7 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     
     // Solve equation
     result.setParams((-beta + sqrt(discriminant)) / (2 * alpha), (-beta - sqrt(discriminant)) / (2 * alpha));
-    LOG(WARNING) << " AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = " << result.getParam1() << " , " << result.getParam2();;
+    LOG(WARNING) << " Params = " << result.getParam1() << " , " << result.getParam2();;
     return;
 }
 

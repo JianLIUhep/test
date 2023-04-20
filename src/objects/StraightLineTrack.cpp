@@ -18,7 +18,7 @@
 using namespace corryvreckan;
 
 ROOT::Math::XYPoint StraightLineTrack::distance(const Cluster* cluster) const {
-    LOG(WARNING) << "I am here: distance()!";
+    LOG(INFO) << "I am here: distance()!";
     if(get_plane(cluster->detectorID()) == nullptr) {
         throw MissingReferenceException(typeid(*this), typeid(Plane));
     }
@@ -35,7 +35,7 @@ ROOT::Math::XYPoint StraightLineTrack::distance(const Cluster* cluster) const {
 }
 
 ROOT::Math::XYPoint StraightLineTrack::getKinkAt(const std::string&) const {
-    LOG(WARNING) << "I am here: getKinkAt()!";
+    LOG(INFO) << "I am here: getKinkAt()!";
     return ROOT::Math::XYPoint(0, 0);
 }
 
@@ -44,7 +44,7 @@ ROOT::Math::XYZPoint StraightLineTrack::get_m_state() const {
 }
 
 ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) const {
-    LOG(WARNING) << "I am here: getState()!";
+    LOG(INFO) << "I am here: getState()!";
     if(get_plane(detectorID) == nullptr) {
         throw MissingReferenceException(typeid(*this), typeid(Plane));
     }
@@ -64,37 +64,39 @@ ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) 
     //     pathLength = -distance.Dot(blabla) / m_direction.Dot(blabla);
     // }
     ROOT::Math::XYZPoint position = m_state + pathLength * m_direction;
-
-    LOG(WARNING) << " DETECTOR: " << detectorID;
-    LOG(INFO) << " toglobal = " << toGlobal;
-    LOG(INFO) << "planeU = " << planeU << ", "
-          << "planeV = " << planeV << ", "
-          << "planeN = " << planeN;
-    LOG(INFO) << "origin = " << origin;
-    LOG(INFO) << "m_state = " << m_state;
-    LOG(INFO) << "distance = " << distance;
-    LOG(INFO) << "pathLength = " << pathLength;
-    LOG(WARNING) << "position = " << position;
-    LOG(INFO) << "m_direction = " << m_direction;
-    LOG(INFO) << "-distance.Dot(planeN) = " << -distance.Dot(planeN);
-    LOG(INFO) << "m_direction.Dot(planeN) = " << m_direction.Dot(planeN);
-    LOG(INFO) << "pathLength * m_direction = " << pathLength * m_direction;
-    LOG(INFO) << "m_direction.Dot(planeN.Unit()) = " << m_direction.Dot(planeN.Unit());
+    if (detectorID == "ALPIDE_3") {
+        LOG(INFO) << " DETECTOR: " << detectorID;
+        LOG(INFO) << " toglobal = " << toGlobal;
+        LOG(INFO) << "planeU = " << planeU << ", "
+            << "planeV = " << planeV << ", "
+            << "planeN = " << planeN;
+        LOG(INFO) << "origin = " << origin;
+        LOG(INFO) << "m_state = " << m_state;
+        LOG(INFO) << "distance = " << distance;
+        LOG(INFO) << "pathLength = " << pathLength;
+        LOG(INFO) << "position = " << position;
+        LOG(INFO) << "m_direction = " << m_direction;
+        LOG(INFO) << "-distance.Dot(planeN) = " << -distance.Dot(planeN);
+        LOG(INFO) << "m_direction.Dot(planeN) = " << m_direction.Dot(planeN);
+        LOG(INFO) << "pathLength * m_direction = " << pathLength * m_direction;
+        LOG(INFO) << "m_direction.Dot(planeN.Unit()) = " << m_direction.Dot(planeN.Unit());
+    }
+    
     return position;
 }
 
 ROOT::Math::XYZVector StraightLineTrack::getDirection(const std::string&) const {
-    LOG(WARNING) << "I am here: getDirection()!";
+    LOG(INFO) << "I am here: getDirection()!";
     return m_direction;
 }
 
 ROOT::Math::XYZVector StraightLineTrack::getDirection(const double&) const {
-    LOG(WARNING) << "I am here: getDirection2()!";
+    LOG(INFO) << "I am here: getDirection2()!";
     return m_direction;
 }
 
 void StraightLineTrack::calculateChi2() {
-    LOG(WARNING) << "I am here: calculateChi2()!";
+    LOG(INFO) << "I am here: calculateChi2()!";
 
     // Get the number of clusters
     // We do have a 2-dimensional offset(x_0,y_0) and slope (dx,dy). Each hit provides two measurements.
@@ -115,18 +117,23 @@ void StraightLineTrack::calculateChi2() {
 
         // Get the distance and the error
         auto intercept = get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
+        LOG(WARNING) << "chi2: intercept = " << intercept;
         auto dist = cluster->local() - intercept;
+        LOG(WARNING) << "chi2: dist = " << dist;
         double ex2 = cluster->errorX() * cluster->errorX();
         double ey2 = cluster->errorY() * cluster->errorY();
+        LOG(WARNING) << "chi2: ex2 = " << ex2;
+        LOG(WARNING) << "chi2: ey2 = " << ey2;
         chi2_ += ((dist.x() * dist.x() / ex2) + (dist.y() * dist.y() / ey2));
     }
-
+    
+    LOG(WARNING) << "chi222 = " << chi2_;
     // Store also the chi2/degrees of freedom
     chi2ndof_ = (ndof_ <= 0) ? -1 : (chi2_ / static_cast<double>(ndof_));
 }
 
 void StraightLineTrack::calculateResiduals() {
-    LOG(WARNING) << "I am here: calculateResiduals()!";
+    LOG(INFO) << "I am here: calculateResiduals()!";
     for(const auto& c : track_clusters_) {
         auto* cluster = c.get();
         if(get_plane(cluster->detectorID()) == nullptr) {
@@ -139,7 +146,7 @@ void StraightLineTrack::calculateResiduals() {
 }
 
 double StraightLineTrack::operator()(const double* parameters) {
-    LOG(WARNING) << "I am here: operator()!";
+    LOG(INFO) << "I am here: operator()!";
     LOG(INFO) << "parameters: "<< parameters;
     // Update the StraightLineTrack gradient and intercept
     this->m_direction.SetX(parameters[0]);
@@ -155,7 +162,7 @@ double StraightLineTrack::operator()(const double* parameters) {
 }
 
 void StraightLineTrack::fit() {
-    LOG(WARNING) << "I am here: fit()!";
+    LOG(INFO) << "I am here: fit()!";
     isFitted_ = false;
     Eigen::Matrix4d mat(Eigen::Matrix4d::Zero());
     Eigen::Vector4d vec(Eigen::Vector4d::Zero());
@@ -220,8 +227,8 @@ void StraightLineTrack::fit() {
 }
 
 ROOT::Math::XYZPoint StraightLineTrack::getIntercept(double z) const {
-    LOG(WARNING) << "I am here: getIntercept()!";
-    LOG(WARNING) << " slt: intercept = " << m_state + m_direction * z;
+    LOG(INFO) << "I am here: getIntercept()!";
+    LOG(INFO) << " slt: intercept = " << m_state + m_direction * z;
     return m_state + m_direction * z;
 }
 
