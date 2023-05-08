@@ -269,15 +269,17 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     double beta;
     double gamma;
     // TODO: rewrite using ROOT::Math::Dot(v1,v2) !!
-    int component =
-        (direction_cylinder.X() != 0 && direction_cylinder.Y() == 0)
-            ? 0
-            : 1; // no other possibilities (see getIntercept's if); cylinder along x (column) : cylinder along y (row)
-    alpha = direction_track.Mag2() -
-            (component == 0 ? direction_track.X() * direction_track.X() : direction_track.Y() * direction_track.Y());
-    beta = 2 * (state_track - state_cylinder).Dot(direction_track) -
-           2 * (component == 0 ? direction_track.X() * (state_track.X() - state_cylinder.X())
-                               : direction_track.Y() * (state_track.Y() - state_cylinder.Y()));
+    // int component =
+    //    (direction_cylinder.X() != 0 && direction_cylinder.Y() == 0)
+    //        ? 0
+    //        : 1; // no other possibilities (see getIntercept's if); cylinder along x (column) : cylinder along y (row)
+    //alpha = direction_track.Mag2() -
+    //        (component == 0 ? direction_track.X() * direction_track.X() : direction_track.Y() * direction_track.Y());
+    alpha = direction_track.Dot(direction_track) - pow(direction_track.Dot(direction_cylinder),2);
+    // beta = 2 * (state_track - state_cylinder).Dot(direction_track) -
+    //       2 * (component == 0 ? direction_track.X() * (state_track.X() - state_cylinder.X())
+    //                           : direction_track.Y() * (state_track.Y() - state_cylinder.Y()));
+    beta = 2 * (direction_track.Dot(state_track-state_cylinder) - (direction_track.Dot(direction_cylinder))*((state_track-state_cylinder).Dot(direction_cylinder)));
     // gamma = state_track.Mag2() + state_cylinder.Mag2() -
     //         (component == 0 ? state_track.X() * state_track.X() + state_cylinder.X() * state_cylinder.X()
     //                         : state_track.Y() * state_track.Y() + state_cylinder.Y() * state_cylinder.Y()) -

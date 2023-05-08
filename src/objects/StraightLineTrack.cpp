@@ -116,18 +116,25 @@ void StraightLineTrack::calculateChi2() {
         }
 
         // Get the distance and the error
+        LOG(WARNING) << "chi2: detectorID = " << cluster->detectorID();
         auto intercept = get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
+        if (cluster->detectorID() == "ALPIDE_3") {
+            std::cout << "HERE!" << std::endl;
+            intercept = get_plane(cluster->detectorID())->getToLocal() * get_m_state();
+        }
         LOG(WARNING) << "chi2: intercept = " << intercept;
+        LOG(WARNING) << "chi2: get_m_state = " << get_m_state();
+        LOG(WARNING) << "chi2: getState(cluster->detectorID()) = " << getState(cluster->detectorID());
         auto dist = cluster->local() - intercept;
+        LOG(WARNING) << "chi2: cluster->local() = " << cluster->local();
         LOG(WARNING) << "chi2: dist = " << dist;
         double ex2 = cluster->errorX() * cluster->errorX();
         double ey2 = cluster->errorY() * cluster->errorY();
-        LOG(WARNING) << "chi2: ex2 = " << ex2;
-        LOG(WARNING) << "chi2: ey2 = " << ey2;
         chi2_ += ((dist.x() * dist.x() / ex2) + (dist.y() * dist.y() / ey2));
+        LOG(WARNING) << "chi2: chi2_ ++ = " << chi2_;
     }
     
-    LOG(WARNING) << "chi222 = " << chi2_;
+    LOG(WARNING) << "chi2: chi2_ = " << chi2_;
     // Store also the chi2/degrees of freedom
     chi2ndof_ = (ndof_ <= 0) ? -1 : (chi2_ / static_cast<double>(ndof_));
 }
