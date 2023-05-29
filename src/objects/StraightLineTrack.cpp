@@ -12,6 +12,7 @@
 #include "StraightLineTrack.hpp"
 #include "Eigen/Dense"
 #include "Track.hpp"
+#include "core/utils/log.h"
 #include "exceptions.h"
 #include "core/utils/log.h"
 
@@ -44,11 +45,13 @@ ROOT::Math::XYZPoint StraightLineTrack::get_m_state() const {
 }
 
 ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) const {
-    LOG(INFO) << "I am here: getState()!";
-    if(get_plane(detectorID) == nullptr) {
+    LOG(TRACE) << "Requesting state at: " << detectorID;
+    auto plane =
+        std::find_if(planes_.begin(), planes_.end(), [&detectorID](Plane const& p) { return p.getName() == detectorID; });
+    if(plane == planes_.end()) {
         throw MissingReferenceException(typeid(*this), typeid(Plane));
     }
-    auto toGlobal = get_plane(detectorID)->getToGlobal();
+    auto toGlobal = plane->getToGlobal();
     ROOT::Math::XYZVector planeU, planeV, planeN;
     toGlobal.Rotation().GetComponents(planeU, planeV, planeN);
     ROOT::Math::XYZPoint origin = toGlobal.Translation() * ROOT::Math::XYZPoint(0, 0, 0);
