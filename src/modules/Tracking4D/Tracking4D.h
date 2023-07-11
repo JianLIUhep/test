@@ -84,6 +84,8 @@ namespace corryvreckan {
 
         // Cuts for tracking
         double momentum_;
+        double beta_;
+        int charge_;
         double max_plot_chi2_;
         double volume_radiation_length_;
         size_t min_hits_on_track_;
