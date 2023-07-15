@@ -260,14 +260,13 @@ void Detector::Alignment::recalculate() {
     origin_ = ROOT::Math::XYZVector(0., 0., 0.);
     origin_ = local2global_ * origin_;
 
-
     auto local_z = local2global_ * ROOT::Math::XYZPoint(0., 0., 1.);
     normal_ = ROOT::Math::XYZVector(local_z.X() - origin_.X(), local_z.Y() - origin_.Y(), local_z.Z() - origin_.Z());
     LOG(TRACE) << "local_z: " << local_z;
-    LOG(TRACE) << "Origin " << origin_;    
+    LOG(TRACE) << "Origin " << origin_;
     LOG(TRACE) << "Normal " << normal_;
 
-    LOG(TRACE) << "local2global_:"<< local2global_;
+    LOG(TRACE) << "local2global_:" << local2global_;
 }
 
 double Detector::getTimeResolution() const {

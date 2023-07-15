@@ -166,54 +166,54 @@ void Tracking4D::initialize() {
                                            30);
 
         clg_z_x_[detectorID] = new TH2F("cluster_global_XZ",
-                                           "cluster global XZ; cluster global z [mm]; cluster global x [mm]",
-                                           600,
-                                           offset.Z() - 10,
-                                           offset.Z() + 10,
-                                           600,
-                                           -30,
-                                           30);
+                                        "cluster global XZ; cluster global z [mm]; cluster global x [mm]",
+                                        600,
+                                        offset.Z() - 10,
+                                        offset.Z() + 10,
+                                        600,
+                                        -30,
+                                        30);
         clg_z_y_[detectorID] = new TH2F("cluster_global_YZ",
-                                           "cluster global YZ; cluster global z [mm]; cluster global y [mm]",
-                                           600,
-                                           offset.Z() - 10,
-                                           offset.Z() + 10,
-                                           600,
-                                           -30,
-                                           30);
-        if (detectorID == "ALPIDE_3") {
-        global_z_x_[detectorID] = new TH2F("global_intersect_XZ",
-                                           "global intersect XZ; global intercept z [mm];global intercept X [mm]",
-                                           600,
-                                           0 - 10,
-                                           0 + 10,
-                                           600,
-                                           -30,
-                                           30);
-        global_z_y_[detectorID] = new TH2F("global_intersect_YZ",
-                                           "global intersect YZ; global intercept z [mm];global intercept Y [mm]",
-                                           600,
-                                           0 - 10,
-                                           0 + 10,
-                                           600,
-                                           -30,
-                                           30);
-        clg_z_x_[detectorID] = new TH2F("cluster_global_XZ",
-                                           "cluster global XZ; cluster global z [mm]; cluster global x [mm]",
-                                           600,
-                                           0 - 10,
-                                           0 + 10,
-                                           600,
-                                           -30,
-                                           30);
-        clg_z_y_[detectorID] = new TH2F("cluster_global_YZ",
-                                           "cluster global YZ; cluster global z [mm]; cluster global y [mm]",
-                                           600,
-                                           0 - 10,
-                                           0 + 10,
-                                           600,
-                                           -30,
-                                           30);
+                                        "cluster global YZ; cluster global z [mm]; cluster global y [mm]",
+                                        600,
+                                        offset.Z() - 10,
+                                        offset.Z() + 10,
+                                        600,
+                                        -30,
+                                        30);
+        if(detectorID == "ALPIDE_3") {
+            global_z_x_[detectorID] = new TH2F("global_intersect_XZ",
+                                               "global intersect XZ; global intercept z [mm];global intercept X [mm]",
+                                               600,
+                                               0 - 10,
+                                               0 + 10,
+                                               600,
+                                               -30,
+                                               30);
+            global_z_y_[detectorID] = new TH2F("global_intersect_YZ",
+                                               "global intersect YZ; global intercept z [mm];global intercept Y [mm]",
+                                               600,
+                                               0 - 10,
+                                               0 + 10,
+                                               600,
+                                               -30,
+                                               30);
+            clg_z_x_[detectorID] = new TH2F("cluster_global_XZ",
+                                            "cluster global XZ; cluster global z [mm]; cluster global x [mm]",
+                                            600,
+                                            0 - 10,
+                                            0 + 10,
+                                            600,
+                                            -30,
+                                            30);
+            clg_z_y_[detectorID] = new TH2F("cluster_global_YZ",
+                                            "cluster global YZ; cluster global z [mm]; cluster global y [mm]",
+                                            600,
+                                            0 - 10,
+                                            0 + 10,
+                                            600,
+                                            -30,
+                                            30);
         }
         // Do not create plots for detectors not participating in the tracking:
         if(exclude_DUT_ && detector->isDUT()) {
@@ -708,8 +708,10 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
             }
             residualsZ_global[detectorID]->Fill(globalRes.Z());
 
-            LOG(INFO) << "tr4d: loc cluster x,y,z = " << trackCluster->local().x() << ", " << trackCluster->local().y() << ", " << trackCluster->local().z();
-            LOG(INFO) << "tr4d: global cluster x,y,z = " << trackCluster->global().x() << ", " << trackCluster->global().y() << ", " << trackCluster->global().z();
+            LOG(INFO) << "tr4d: loc cluster x,y,z = " << trackCluster->local().x() << ", " << trackCluster->local().y()
+                      << ", " << trackCluster->local().z();
+            LOG(INFO) << "tr4d: global cluster x,y,z = " << trackCluster->global().x() << ", " << trackCluster->global().y()
+                      << ", " << trackCluster->global().z();
         }
 
         for(auto& detector : get_regular_detectors(true)) {

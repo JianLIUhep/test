@@ -766,7 +766,6 @@ StatusCode AnalysisDUT::run(const std::shared_ptr<Clipboard>& clipboard) {
         LOG(WARNING) << "globalIntercept = " << globalIntercept;
         LOG(WARNING) << "localIntercept = " << localIntercept;
 
-
         // Fill correlation plots BEFORE applying any cuts:
         if(correlations_) {
             auto clusters = clipboard->getData<Cluster>(m_detector->getName());

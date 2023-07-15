@@ -19,7 +19,6 @@ using namespace corryvreckan;
 
 BentPixelDetector::BentPixelDetector(const Configuration& config) : PixelDetector(config) {
     build_axes(config);
-
 }
 
 void BentPixelDetector::build_axes(const Configuration& config) {
@@ -66,7 +65,8 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
 //         locz = local.z() - m_radius * (1.0 - cos(local.y() / m_radius));
 //     }
 //     ROOT::Math::XYZPoint local_transformed = toGlobal() * ROOT::Math::XYZPoint(locx, locy, locz);
-//     LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z() << ") to global point ("
+//     LOG(TRACE) << "Transformed local point (" << local.x() << "|" << local.y() << "|" << local.z() << ") to global point
+//     ("
 //                << local_transformed.x() << "|" << local_transformed.y() << "|" << local_transformed.z() << ").";
 //     return local_transformed;
 // }
@@ -106,11 +106,10 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
     //                      1); // TODO: should z be 0 in local coords(i.e. add loc_tr.z())?
     // }
     ROOT::Math::XYZPoint local = ROOT::Math::XYZPoint(lx, ly, lz);
-    LOG(INFO) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z()
-               << ") to local point (" << local.x() << "|" << local.y() << "|" << local.z() << ").";
+    LOG(INFO) << "Transformed global point (" << global.x() << "|" << global.y() << "|" << global.z() << ") to local point ("
+              << local.x() << "|" << local.y() << "|" << local.z() << ").";
     return local;
 }
-
 
 // no need to implement as everything is in build_axes (See l78, l62 in pxdet.cpp)?
 XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) const {
@@ -118,17 +117,16 @@ XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) 
     double theta = 0.0;
     if(m_bent_axis == BentAxis::COLUMN) {
         theta = m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.) / (m_radius);
-    }
-    else {
+    } else {
         theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
     }
     LOG(INFO) << "getSpatialResolutionXYZ: theta = " << theta;
-    LOG(INFO) << "getSpatialResolutionXYZ: col, row = " << column << "," << row ;
+    LOG(INFO) << "getSpatialResolutionXYZ: col, row = " << column << "," << row;
     LOG(INFO) << "getSpatialResolutionXYZ: m_spatial_resolution = " << m_spatial_resolution;
     XYZVector sp_reso{m_spatial_resolution.x(), m_spatial_resolution.y(), m_spatial_resolution.x()};
 
-    sp_reso.SetX(m_spatial_resolution.x() * cos (theta)); 
-    sp_reso.SetZ(m_spatial_resolution.x() * sin (theta));
+    sp_reso.SetX(m_spatial_resolution.x() * cos(theta));
+    sp_reso.SetZ(m_spatial_resolution.x() * sin(theta));
     // m_spatial_resolution.SetY(m_spatial_resolution.y() * sin (theta));
     LOG(INFO) << "getSpatialResolutionXYZ: sp_reso X  = " << sp_reso.x();
     LOG(INFO) << "getSpatialResolutionXYZ: sp_reso Y  = " << sp_reso.y();
@@ -137,7 +135,7 @@ XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) 
 }
 
 XYVector BentPixelDetector::getSpatialResolution(double column, double row) const {
-    XYZVector res = this->getSpatialResolutionXYZ(column,row);
+    XYZVector res = this->getSpatialResolutionXYZ(column, row);
     LOG(INFO) << "getSpatialResolution: m_sp_res X  = " << res.x();
     LOG(INFO) << "getSpatialResolution: m_sp_res Y  = " << res.y();
     return XYVector(res.x(), res.y());
@@ -154,18 +152,18 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
         LOG(INFO) << "getSpatialResolutionMatrixGlobal: col = " << column;
         // std::cout << "COLUMN = " << column << std::endl;
         LOG(INFO) << "getSpatialResolutionMatrixGlobal: theta  = " << theta;
-        LOG(INFO) << "getSpatialResolutionMatrixGlobal: getSpatialResolution(column,row) = " << getSpatialResolution(column,row);
-    }
-    else {
+        LOG(INFO) << "getSpatialResolutionMatrixGlobal: getSpatialResolution(column,row) = "
+                  << getSpatialResolution(column, row);
+    } else {
         theta = m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.) / (m_radius);
     }
-    errorMatrix(0, 0) = getSpatialResolutionXYZ(column,row).x() * getSpatialResolutionXYZ(column,row).x();
-    errorMatrix(1, 1) = getSpatialResolutionXYZ(column,row).y() * getSpatialResolutionXYZ(column,row).y();
+    errorMatrix(0, 0) = getSpatialResolutionXYZ(column, row).x() * getSpatialResolutionXYZ(column, row).x();
+    errorMatrix(1, 1) = getSpatialResolutionXYZ(column, row).y() * getSpatialResolutionXYZ(column, row).y();
     // errorMatrix(2, 2) = getSpatialResolution(column,row).x() * getSpatialResolution(column,row).x() * sin (theta);
-    errorMatrix(2, 2) = getSpatialResolutionXYZ(column,row).z() * getSpatialResolutionXYZ(column,row).z();
+    errorMatrix(2, 2) = getSpatialResolutionXYZ(column, row).z() * getSpatialResolutionXYZ(column, row).z();
 
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: errorMatrix = ";
-    //errorMatrix.Print();
+    // errorMatrix.Print();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g = " << alignment_->local2global();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: l2g rot = " << alignment_->local2global().Rotation();
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: g2l = " << alignment_->global2local();
@@ -175,7 +173,7 @@ TMatrixD BentPixelDetector::getSpatialResolutionMatrixGlobal(double column, doub
 
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;
     LOG(INFO) << "getSpatialResolutionMatrixGlobal: m_spatial_resolution_matrix_global:";
-    //m_spatial_resolution_matrix_global.Print();
+    // m_spatial_resolution_matrix_global.Print();
 
     return m_spatial_resolution_matrix_global;
 }
@@ -185,16 +183,20 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalPosition(double
     // (almost) almighty  cylinders - define "zero degree" at center of chip
     if(m_bent_axis == BentAxis::COLUMN) {
         // eversion possible by change or sign of the radius; but.. does it matter?
-        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(-m_radius));
-        LOG(INFO) << "getLocalPosition: col, row = " << column << "," << row ;
+        local = ROOT::Math::RhoZPhiVector(m_radius,
+                                          (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)),
+                                          m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.) / (-m_radius));
+        LOG(INFO) << "getLocalPosition: col, row = " << column << "," << row;
         LOG(INFO) << "getLocalPosition: local = " << local;
     } else {
         // not yet corrected; should just be a swap
-        local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.))/(-m_radius), m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.));
+        local = ROOT::Math::RhoZPhiVector(m_radius,
+                                          (m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)) / (-m_radius),
+                                          m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.));
     }
     LOG(INFO) << "local cart = " << static_cast<PositionVector3D<Cartesian3D<double>>>(local);
 
-    //play area below
+    // play area below
     // ROOT::Math::XYZVector xyz_vec(local.x() * cos(local.phi()),local.x() * sin(local.phi()),local.z());
     // LOG(INFO) << " SOME SEXY VECTOR HERE = " << xyz_vec;
     return static_cast<PositionVector3D<Cartesian3D<double>>>(local);
@@ -212,14 +214,13 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     // Get and transform track state and direction
     PositionVector3D<Cartesian3D<double>> state_track = track->get_m_state();
     // DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
-    LOG(INFO) << "m_State= " <<state_track;
+    LOG(INFO) << "m_State= " << state_track;
     // Bring track to local (transformed) coordinate system
     // state_track = toLocal() * state_track;
     // direction_track = toLocal().Rotation() * direction_track;
     // direction_track = direction_track.Unit();
-    
-    DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
 
+    DisplacementVector3D<Cartesian3D<double>> direction_track = track->getDirection(m_detectorName);
 
     // From globalPlanarIntercept get intercept with bent surface of pixel detector
     InterceptParameters intercept_parameters;
@@ -237,7 +238,8 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
         state_cylinder = {0, this->getSize().Y() / 2, m_radius};
         direction_cylinder = {1, 0, 0}; // cylinder axis along x (column)
     }
-    LOG(INFO) << " st,dt,sc,dc = " << state_track << ", " << direction_track << ", " << state_cylinder << ", "<< direction_cylinder;
+    LOG(INFO) << " st,dt,sc,dc = " << state_track << ", " << direction_track << ", " << state_cylinder << ", "
+              << direction_cylinder;
     get_intercept_parameters(state_track, direction_track, state_cylinder, direction_cylinder, intercept_parameters);
 
     // Select solution according to bending direction
@@ -252,8 +254,8 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Trac
     auto param = (m_radius > 0) ? intercept_parameters.getParam1()
                                 : intercept_parameters.getParam2(); // for negative radius select smaller solution
     bentIntercept = ROOT::Math::XYZPoint(state_track.x() + param * direction_track.x(),
-                                              state_track.y() + param * direction_track.y(),
-                                              state_track.z() + param * direction_track.z());
+                                         state_track.y() + param * direction_track.y(),
+                                         state_track.z() + param * direction_track.z());
     LOG(INFO) << " bentIntercept = " << bentIntercept;
     // return toGlobal() * bentIntercept;
     return bentIntercept;
@@ -273,13 +275,14 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     //    (direction_cylinder.X() != 0 && direction_cylinder.Y() == 0)
     //        ? 0
     //        : 1; // no other possibilities (see getIntercept's if); cylinder along x (column) : cylinder along y (row)
-    //alpha = direction_track.Mag2() -
+    // alpha = direction_track.Mag2() -
     //        (component == 0 ? direction_track.X() * direction_track.X() : direction_track.Y() * direction_track.Y());
-    alpha = direction_track.Dot(direction_track) - pow(direction_track.Dot(direction_cylinder),2);
+    alpha = direction_track.Dot(direction_track) - pow(direction_track.Dot(direction_cylinder), 2);
     // beta = 2 * (state_track - state_cylinder).Dot(direction_track) -
     //       2 * (component == 0 ? direction_track.X() * (state_track.X() - state_cylinder.X())
     //                           : direction_track.Y() * (state_track.Y() - state_cylinder.Y()));
-    beta = 2 * (direction_track.Dot(state_track-state_cylinder) - (direction_track.Dot(direction_cylinder))*((state_track-state_cylinder).Dot(direction_cylinder)));
+    beta = 2 * (direction_track.Dot(state_track - state_cylinder) -
+                (direction_track.Dot(direction_cylinder)) * ((state_track - state_cylinder).Dot(direction_cylinder)));
     // gamma = state_track.Mag2() + state_cylinder.Mag2() -
     //         (component == 0 ? state_track.X() * state_track.X() + state_cylinder.X() * state_cylinder.X()
     //                         : state_track.Y() * state_track.Y() + state_cylinder.Y() * state_cylinder.Y()) -
@@ -287,9 +290,8 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     //              state_track.Z() * state_cylinder.Z()) -
     //         (m_radius * m_radius);
 
-    gamma = (state_track-state_cylinder).Dot(state_track-state_cylinder) -
-            pow((state_track-state_cylinder).Dot(direction_cylinder),2) -
-            (m_radius * m_radius);
+    gamma = (state_track - state_cylinder).Dot(state_track - state_cylinder) -
+            pow((state_track - state_cylinder).Dot(direction_cylinder), 2) - (m_radius * m_radius);
     // Check if the quadratic equation has a solution
     double discriminant = beta * beta - 4 * alpha * gamma;
     LOG(INFO) << " alpha,beta,gamma, disc = " << alpha << ", " << beta << ", " << gamma << ", " << discriminant;
@@ -297,14 +299,13 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     if(discriminant < 0 || alpha == 0) { // must have real solution
         return;
     }
-    
+
     // Solve equation
     result.setParams((-beta + sqrt(discriminant)) / (2 * alpha), (-beta - sqrt(discriminant)) / (2 * alpha));
-    LOG(INFO) << " Params = " << result.getParam1() << " , " << result.getParam2();;
+    LOG(INFO) << " Params = " << result.getParam1() << " , " << result.getParam2();
+    ;
     return;
 }
-
-
 
 bool BentPixelDetector::hasIntercept(const Track* track, double pixelTolerance) const {
 

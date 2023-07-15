@@ -14,7 +14,6 @@
 #include "Track.hpp"
 #include "core/utils/log.h"
 #include "exceptions.h"
-#include "core/utils/log.h"
 
 using namespace corryvreckan;
 
@@ -67,12 +66,12 @@ ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) 
     //     pathLength = -distance.Dot(blabla) / m_direction.Dot(blabla);
     // }
     ROOT::Math::XYZPoint position = m_state + pathLength * m_direction;
-    if (detectorID == "ALPIDE_3") {
+    if(detectorID == "ALPIDE_3") {
         LOG(INFO) << " DETECTOR: " << detectorID;
         LOG(INFO) << " toglobal = " << toGlobal;
         LOG(INFO) << "planeU = " << planeU << ", "
-            << "planeV = " << planeV << ", "
-            << "planeN = " << planeN;
+                  << "planeV = " << planeV << ", "
+                  << "planeN = " << planeN;
         LOG(INFO) << "origin = " << origin;
         LOG(INFO) << "m_state = " << m_state;
         LOG(INFO) << "distance = " << distance;
@@ -84,7 +83,7 @@ ROOT::Math::XYZPoint StraightLineTrack::getState(const std::string& detectorID) 
         LOG(INFO) << "pathLength * m_direction = " << pathLength * m_direction;
         LOG(INFO) << "m_direction.Dot(planeN.Unit()) = " << m_direction.Dot(planeN.Unit());
     }
-    
+
     return position;
 }
 
@@ -121,7 +120,7 @@ void StraightLineTrack::calculateChi2() {
         // Get the distance and the error
         LOG(WARNING) << "chi2: detectorID = " << cluster->detectorID();
         auto intercept = get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
-        if (cluster->detectorID() == "ALPIDE_3") {
+        if(cluster->detectorID() == "ALPIDE_3") {
             LOG(WARNING) << "HERE!";
             intercept = get_plane(cluster->detectorID())->getToLocal() * get_m_state();
         }
@@ -136,7 +135,7 @@ void StraightLineTrack::calculateChi2() {
         chi2_ += ((dist.x() * dist.x() / ex2) + (dist.y() * dist.y() / ey2));
         LOG(WARNING) << "chi2: chi2_ ++ = " << chi2_;
     }
-    
+
     LOG(WARNING) << "chi2: chi2_ = " << chi2_;
     // Store also the chi2/degrees of freedom
     chi2ndof_ = (ndof_ <= 0) ? -1 : (chi2_ / static_cast<double>(ndof_));
@@ -157,7 +156,7 @@ void StraightLineTrack::calculateResiduals() {
 
 double StraightLineTrack::operator()(const double* parameters) {
     LOG(INFO) << "I am here: operator()!";
-    LOG(INFO) << "parameters: "<< parameters;
+    LOG(INFO) << "parameters: " << parameters;
     // Update the StraightLineTrack gradient and intercept
     this->m_direction.SetX(parameters[0]);
     this->m_state.SetX(parameters[1]);
@@ -192,15 +191,17 @@ void StraightLineTrack::fit() {
         Eigen::Vector2d pos(x, y);
         auto errorMatrix = cluster->errorMatrixGlobal();
         Eigen::Matrix2d V;
-        //LOG(INFO) << "eM = ";
-        //errorMatrix.Print();
-        if(errorMatrix(0,0)<1e-8) {
-            errorMatrix(0,0) = 1e-7;
-            V << errorMatrix(0,0), errorMatrix (0, 1), errorMatrix(1, 0), errorMatrix(1, 1);} 
-        else {
-        V << errorMatrix(0,0), errorMatrix (0, 1), errorMatrix(1, 0), errorMatrix(1, 1);}
-         
-        //if(cluster->getDetectorID()=="ALPIDE_3") V << errorMatrix(2, 2), errorMatrix(0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
+        // LOG(INFO) << "eM = ";
+        // errorMatrix.Print();
+        if(errorMatrix(0, 0) < 1e-8) {
+            errorMatrix(0, 0) = 1e-7;
+            V << errorMatrix(0, 0), errorMatrix(0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
+        } else {
+            V << errorMatrix(0, 0), errorMatrix(0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
+        }
+
+        // if(cluster->getDetectorID()=="ALPIDE_3") V << errorMatrix(2, 2), errorMatrix(0, 1), errorMatrix(1, 0),
+        // errorMatrix(1, 1);
         Eigen::Matrix<double, 2, 4> C;
         // C relates the position of a cluster in space to the track parameters
         // has two ros; so z is always fixed; do I need to change this?? otherwise it's always perpendicular
@@ -218,8 +219,8 @@ void StraightLineTrack::fit() {
         vec += C.transpose() * V.inverse() * pos;
         mat += C.transpose() * V.inverse() * C;
     }
-        // LOG(WARNING) << "mat f: " << mat;
-        // LOG(WARNING) << " vec f: " << vec;
+    // LOG(WARNING) << "mat f: " << mat;
+    // LOG(WARNING) << " vec f: " << vec;
 
     // Check for singularities.
     if(fabs(mat.determinant()) < std::numeric_limits<double>::epsilon()) {
