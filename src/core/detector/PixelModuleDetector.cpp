@@ -209,7 +209,7 @@ XYVector PixelModuleDetector::getSpatialResolution(double column = 0, double row
     return XYVector(resolution_x, resolution_y);
 }
 
-TMatrixD PixelModuleDetector::getSpatialResolutionMatrixGlobal(double column = 0, double row = 0) const {
+TMatrixD PixelModuleDetector::getSpatialResolutionMatrixGlobal(double column = 0, double row = 0) {
     TMatrixD errorMatrix(3, 3);
     TMatrixD locToGlob(3, 3), globToLoc(3, 3);
     auto spatial_resolution = getSpatialResolution(column, row);

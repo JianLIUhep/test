@@ -149,7 +149,7 @@ namespace corryvreckan {
          * @note For a detector with variable pixel sizes this declaration could be changed to take column and row pixel
          * indices to calculate the resolution for a specific pixel
          */
-        virtual XYVector getSpatialResolution([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) override { return m_spatial_resolution; }
+        virtual XYVector getSpatialResolution([[maybe_unused]] double column = 0, [[maybe_unused]] double row = 0) const override { return m_spatial_resolution; }
 
         /**
          * @brief Get intrinsic spatial resolution in global coordinates of the detector

@@ -54,9 +54,9 @@ namespace corryvreckan {
          */
         BentPixelDetector(const Configuration& config);
 
-        XYZVector getSpatialResolutionXYZ(double column = 0, double row = 0);
+        XYZVector getSpatialResolutionXYZ(double column = 0, double row = 0) const;
 
-        XYVector getSpatialResolution(double column = 0, double row = 0) override;
+        XYVector getSpatialResolution(double column = 0, double row = 0) const override;
 
         TMatrixD getSpatialResolutionMatrixGlobal(double column = 0, double row = 0) override;
 

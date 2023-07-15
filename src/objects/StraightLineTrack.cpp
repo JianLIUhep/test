@@ -122,7 +122,7 @@ void StraightLineTrack::calculateChi2() {
         LOG(WARNING) << "chi2: detectorID = " << cluster->detectorID();
         auto intercept = get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
         if (cluster->detectorID() == "ALPIDE_3") {
-            std::cout << "HERE!" << std::endl;
+            LOG(WARNING) << "HERE!";
             intercept = get_plane(cluster->detectorID())->getToLocal() * get_m_state();
         }
         LOG(WARNING) << "chi2: intercept = " << intercept;
@@ -192,8 +192,14 @@ void StraightLineTrack::fit() {
         Eigen::Vector2d pos(x, y);
         auto errorMatrix = cluster->errorMatrixGlobal();
         Eigen::Matrix2d V;
-
-        V << errorMatrix(0,0), errorMatrix (0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
+        //LOG(INFO) << "eM = ";
+        //errorMatrix.Print();
+        if(errorMatrix(0,0)<1e-8) {
+            errorMatrix(0,0) = 1e-7;
+            V << errorMatrix(0,0), errorMatrix (0, 1), errorMatrix(1, 0), errorMatrix(1, 1);} 
+        else {
+        V << errorMatrix(0,0), errorMatrix (0, 1), errorMatrix(1, 0), errorMatrix(1, 1);}
+         
         //if(cluster->getDetectorID()=="ALPIDE_3") V << errorMatrix(2, 2), errorMatrix(0, 1), errorMatrix(1, 0), errorMatrix(1, 1);
         Eigen::Matrix<double, 2, 4> C;
         // C relates the position of a cluster in space to the track parameters
@@ -205,6 +211,7 @@ void StraightLineTrack::fit() {
         // Fill the matrices
         if(fabs(V.determinant()) < std::numeric_limits<double>::epsilon()) {
             std::cout << "V = \n" << V << std::endl;
+            std::cout << "epsilon = " << std::numeric_limits<double>::epsilon() << std::endl;
             std::cout << "determinant of V = " << V.determinant() << std::endl;
             throw TrackFitError(typeid(this), "Error matrix inversion in straight line fit failed");
         }

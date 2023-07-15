@@ -113,7 +113,7 @@ XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
 
 
 // no need to implement as everything is in build_axes (See l78, l62 in pxdet.cpp)?
-XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) {
+XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) const {
 
     double theta = 0.0;
     if(m_bent_axis == BentAxis::COLUMN) {
@@ -136,7 +136,7 @@ XYZVector BentPixelDetector::getSpatialResolutionXYZ(double column, double row) 
     return sp_reso;
 }
 
-XYVector BentPixelDetector::getSpatialResolution(double column, double row) {
+XYVector BentPixelDetector::getSpatialResolution(double column, double row) const {
     XYZVector res = this->getSpatialResolutionXYZ(column,row);
     LOG(INFO) << "getSpatialResolution: m_sp_res X  = " << res.x();
     LOG(INFO) << "getSpatialResolution: m_sp_res Y  = " << res.y();
@@ -186,7 +186,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalPosition(double
     if(m_bent_axis == BentAxis::COLUMN) {
         // eversion possible by change or sign of the radius; but.. does it matter?
         local = ROOT::Math::RhoZPhiVector(m_radius, (m_pitch.Y() * (row - (m_nPixels.y() - 1) / 2.)), m_pitch.X() * (column - (m_nPixels.x() - 1) / 2.)/(-m_radius));
-        LOG(WARNING) << "getLocalPosition: col, row = " << column << "," << row ;
+        LOG(INFO) << "getLocalPosition: col, row = " << column << "," << row ;
         LOG(INFO) << "getLocalPosition: local = " << local;
     } else {
         // not yet corrected; should just be a swap
@@ -204,7 +204,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalIntercept(const
     // TODO
     LOG(INFO) << " interceptz = " << getIntercept(track);
     LOG(INFO) << " globalToLocal(getIntercept(track)) = " << globalToLocal(getIntercept(track));
-    return globalToLocal(getIntercept(track));
+    return static_cast<PositionVector3D<Cartesian3D<double>>>(globalToLocal(getIntercept(track)));
 }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Track* track) const {
@@ -292,7 +292,7 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
             (m_radius * m_radius);
     // Check if the quadratic equation has a solution
     double discriminant = beta * beta - 4 * alpha * gamma;
-    LOG(WARNING) << " alpha,beta,gamma, disc = " << alpha << ", " << beta << ", " << gamma << ", " << discriminant;
+    LOG(INFO) << " alpha,beta,gamma, disc = " << alpha << ", " << beta << ", " << gamma << ", " << discriminant;
 
     if(discriminant < 0 || alpha == 0) { // must have real solution
         return;
@@ -300,7 +300,7 @@ void BentPixelDetector::get_intercept_parameters(const PositionVector3D<Cartesia
     
     // Solve equation
     result.setParams((-beta + sqrt(discriminant)) / (2 * alpha), (-beta - sqrt(discriminant)) / (2 * alpha));
-    LOG(WARNING) << " Params = " << result.getParam1() << " , " << result.getParam2();;
+    LOG(INFO) << " Params = " << result.getParam1() << " , " << result.getParam2();;
     return;
 }
 

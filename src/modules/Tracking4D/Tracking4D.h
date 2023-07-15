@@ -81,6 +81,9 @@ namespace corryvreckan {
         std::map<std::string, TH2F*> global_intersects_;
         std::map<std::string, TH2F*> global_z_x_;
         std::map<std::string, TH2F*> global_z_y_;
+        std::map<std::string, TH2F*> clg_z_x_;
+        std::map<std::string, TH2F*> clg_z_y_;
+        
 
         // Cuts for tracking
         double momentum_;
