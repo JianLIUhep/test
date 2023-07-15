@@ -206,7 +206,7 @@ PositionVector3D<Cartesian3D<double>> BentPixelDetector::getLocalIntercept(const
     // TODO
     LOG(INFO) << " interceptz = " << getIntercept(track);
     LOG(INFO) << " globalToLocal(getIntercept(track)) = " << globalToLocal(getIntercept(track));
-    return static_cast<PositionVector3D<Cartesian3D<double>>>(globalToLocal(getIntercept(track)));
+    return globalToLocal(getIntercept(track));
 }
 
 PositionVector3D<Cartesian3D<double>> BentPixelDetector::getIntercept(const Track* track) const {
