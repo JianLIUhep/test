@@ -39,12 +39,10 @@ PixelDetector::PixelDetector(const Configuration& config) : Detector(config) {
     errorMatrix(0, 0) = m_spatial_resolution.x() * m_spatial_resolution.x();
     errorMatrix(1, 1) = m_spatial_resolution.y() * m_spatial_resolution.y();
     LOG(INFO) << "pxdet: m_spatial_resolution = " << m_spatial_resolution;
-    LOG(INFO) << "errmat = ";
+    // LOG(INFO) << "errmat = ";
     // errorMatrix.Print();
-    LOG(INFO) << "l2g = " << alignment_->local2global();
-    LOG(INFO) << "l2g rot = " << alignment_->local2global().Rotation();
-    LOG(INFO) << "g2l = " << alignment_->global2local();
-    LOG(INFO) << "g2l rot = " << alignment_->global2local().Rotation();
+    LOG(WARNING) << "l2g = " << alignment_->local2global();
+    LOG(WARNING) << "g2l = " << alignment_->global2local();
     alignment_->local2global().Rotation().GetRotationMatrix(locToGlob);
     alignment_->global2local().Rotation().GetRotationMatrix(globToLoc);
     m_spatial_resolution_matrix_global = locToGlob * errorMatrix * globToLoc;

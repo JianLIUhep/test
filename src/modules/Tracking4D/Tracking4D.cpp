@@ -502,6 +502,8 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
                     LOG(INFO) << "newCluster->local().x() = " << newCluster->local().x();
                     LOG(INFO) << "distX = " << distanceX;
                     double distanceY = interceptY - newCluster->local().y();
+                    LOG(INFO) << "interceptY = " << interceptY;
+                    LOG(INFO) << "newCluster->local().y() = " << newCluster->local().y();
                     LOG(INFO) << "distY = " << distanceY;
                     double distance = sqrt(distanceX * distanceX + distanceY * distanceY);
                     LOG(INFO) << "distancedistance = " << distance;
@@ -723,9 +725,9 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
             LOG(TRACE) << "Local col/row intersect of track: " << col << "\t" << row;
             local_intersects_[det]->Fill(col, row);
             auto global = detector->getIntercept(track.get());
-            LOG(INFO) << "tr4d: loc col = " << col << ", row = " << row;
-            LOG(INFO) << "tr4d: tr intercept global = " << global.X() << ", " << global.Y() << ", " << global.Z();
-            LOG(INFO) << "tr4d: tr intercept local = " << local.X() << ", " << local.Y() << ", " << local.Z();
+            LOG(WARNING) << "tr4d: loc col = " << col << ", row = " << row;
+            LOG(WARNING) << "tr4d: tr intercept global = " << global.X() << ", " << global.Y() << ", " << global.Z();
+            LOG(WARNING) << "tr4d: tr intercept local = " << local.X() << ", " << local.Y() << ", " << local.Z();
             global_intersects_[det]->Fill(global.X(), global.Y());
             global_z_x_[det]->Fill(global.Z(), global.X());
             global_z_y_[det]->Fill(global.Z(), global.Y());

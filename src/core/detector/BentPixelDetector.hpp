@@ -60,6 +60,8 @@ namespace corryvreckan {
 
         TMatrixD getSpatialResolutionMatrixGlobal(double column = 0, double row = 0) override;
 
+        double getColumn(PositionVector3D<Cartesian3D<double>> localPosition) const override;
+
         // Function to get global intercept with a track
         PositionVector3D<Cartesian3D<double>> getIntercept(const Track* track) const override;
 
@@ -80,7 +82,7 @@ namespace corryvreckan {
         //  * @param  global Global coordinates
         //  * @return        Local coordinates in the reference frame of this detector
         //  */
-        XYZPoint globalToLocal(XYZPoint global) const override;
+        // XYZPoint globalToLocal(XYZPoint global) const override;
 
         PositionVector3D<Cartesian3D<double>> getLocalPosition(double column, double row) const override;
 

@@ -12,10 +12,15 @@
 #include "StraightLineTrack.hpp"
 #include "Eigen/Dense"
 #include "Track.hpp"
+#include "core/detector/BentPixelDetector.hpp"
 #include "core/utils/log.h"
 #include "exceptions.h"
 
 using namespace corryvreckan;
+
+// PositionVector3D<Cartesian3D<double>> StraightLineTrack::getIntercept(const Track* track) {
+//     return BentPixelDetector::getIntercept(track);
+// }
 
 ROOT::Math::XYPoint StraightLineTrack::distance(const Cluster* cluster) const {
     LOG(INFO) << "I am here: distance()!";
@@ -121,22 +126,26 @@ void StraightLineTrack::calculateChi2() {
         LOG(WARNING) << "chi2: detectorID = " << cluster->detectorID();
         auto intercept = get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
         if(cluster->detectorID() == "ALPIDE_3") {
-            LOG(WARNING) << "HERE!";
+            LOG(INFO) << "issue HERE!";
             intercept = get_plane(cluster->detectorID())->getToLocal() * get_m_state();
+            // intercept = cluster->getIntercept(*this);
+            // Track* test = nullptr;
+            // BentPixelDetector* test2 = nullptr;
+            // test2->getIntercept(test);
         }
         LOG(WARNING) << "chi2: intercept = " << intercept;
-        LOG(WARNING) << "chi2: get_m_state = " << get_m_state();
-        LOG(WARNING) << "chi2: getState(cluster->detectorID()) = " << getState(cluster->detectorID());
+        LOG(INFO) << "chi2: get_m_state = " << get_m_state();
+        LOG(INFO) << "chi2: getState(cluster->detectorID()) = " << getState(cluster->detectorID());
         auto dist = cluster->local() - intercept;
         LOG(WARNING) << "chi2: cluster->local() = " << cluster->local();
-        LOG(WARNING) << "chi2: dist = " << dist;
+        LOG(INFO) << "chi2: dist = " << dist;
         double ex2 = cluster->errorX() * cluster->errorX();
         double ey2 = cluster->errorY() * cluster->errorY();
         chi2_ += ((dist.x() * dist.x() / ex2) + (dist.y() * dist.y() / ey2));
-        LOG(WARNING) << "chi2: chi2_ ++ = " << chi2_;
+        LOG(INFO) << "chi2: chi2_ ++ = " << chi2_;
     }
 
-    LOG(WARNING) << "chi2: chi2_ = " << chi2_;
+    LOG(INFO) << "chi2: chi2_ = " << chi2_;
     // Store also the chi2/degrees of freedom
     chi2ndof_ = (ndof_ <= 0) ? -1 : (chi2_ / static_cast<double>(ndof_));
 }
@@ -151,6 +160,12 @@ void StraightLineTrack::calculateResiduals() {
         residual_global_[cluster->detectorID()] = cluster->global() - getState(cluster->detectorID());
         residual_local_[cluster->detectorID()] =
             cluster->local() - get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
+
+        if(cluster->detectorID() == "ALPIDE_3") {
+            residual_global_[cluster->detectorID()] = cluster->global() - get_m_state();
+            residual_local_[cluster->detectorID()] =
+                cluster->local() - get_plane(cluster->detectorID())->getToLocal() * get_m_state();
+        }
     }
 }
 

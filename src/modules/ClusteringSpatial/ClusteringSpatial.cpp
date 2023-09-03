@@ -188,8 +188,8 @@ StatusCode ClusteringSpatial::run(const std::shared_ptr<Clipboard>& clipboard) {
         clusterTimes->Fill(static_cast<double>(Units::convert(cluster->timestamp(), "ns")));
         clusterUncertaintyX->Fill(static_cast<double>(Units::convert(cluster->errorX(), "um")));
         clusterUncertaintyY->Fill(static_cast<double>(Units::convert(cluster->errorY(), "um")));
-        LOG(DEBUG) << "cluster local: " << cluster->local();
-
+        LOG(WARNING) << "cluster local: " << cluster->local();
+        LOG(WARNING) << "cluster global: " << cluster->global();
         deviceClusters.push_back(cluster);
     }
 
