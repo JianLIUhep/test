@@ -357,7 +357,8 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
             bentPixelDetector = bent;
         } else {
             LOG(INFO) << "Failure: The object is not of type BentPixelDetector.";
-            LOG(INFO) << "Actual type of the object is: " << typeid(*detector.get()).name();
+            auto detectorPtr = detector.get(); // Assuming this doesn't modify state
+            LOG(INFO) << "Actual type of the object is: " << typeid(detectorPtr).name();
         }
         // Get the clusters
         auto tempClusters = clipboard->getData<Cluster>(detector->getName());
