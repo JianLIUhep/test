@@ -21,12 +21,19 @@ namespace corryvreckan {
      *
      * This class is a simple track class which knows how to fit itself. It is derived from Track
      */
+    // Forward declaration
+    class BentPixelDetector;
 
     class StraightLineTrack : public Track {
 
     public:
         // Minimisation operator used by Minuit. Minuit passes the current iteration of the parameters and checks if the chi2
         // is better or worse
+
+        // Constructor
+        StraightLineTrack(std::shared_ptr<BentPixelDetector> bentPixelDetector = nullptr)
+            : bentPixelDetector_(bentPixelDetector) {}
+
         double operator()(const double* parameters);
 
         void print(std::ostream& out) const override;
@@ -87,6 +94,7 @@ namespace corryvreckan {
         // Member variables
         ROOT::Math::XYZVector m_direction{0, 0, 1.};
         ROOT::Math::XYZPoint m_state{0, 0, 0.};
+        std::shared_ptr<BentPixelDetector> bentPixelDetector_;
 
         // ROOT I/O class definition - update version number when you change this class!
         ClassDefOverride(StraightLineTrack, 1)
