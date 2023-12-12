@@ -127,11 +127,15 @@ void StraightLineTrack::calculateChi2() {
         auto intercept = get_plane(cluster->detectorID())->getToLocal() * getState(cluster->detectorID());
         if(cluster->detectorID() == "ALPIDE_3") {
             LOG(INFO) << "issue HERE!";
-            intercept = get_plane(cluster->detectorID())->getToLocal() * get_m_state();
+            // intercept = get_plane(cluster->detectorID())->getToLocal() * get_m_state();
             // intercept = cluster->getIntercept(*this);
             // Track* test = nullptr;
             // BentPixelDetector* test2 = nullptr;
             // test2->getIntercept(test);
+            if(!bentPixelDetector_) {
+                LOG(INFO) << "empty ptr";
+            }
+            intercept = bentPixelDetector_->getIntercept(this);
         }
         LOG(WARNING) << "chi2: intercept = " << intercept;
         LOG(INFO) << "chi2: get_m_state = " << get_m_state();

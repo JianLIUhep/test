@@ -13,9 +13,9 @@
 #include <TCanvas.h>
 #include <TDirectory.h>
 
+#include "core/detector/BentPixelDetector.hpp"
 #include "tools/cuts.h"
 #include "tools/kdtree.h"
-
 using namespace corryvreckan;
 using namespace std;
 
@@ -346,9 +346,20 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
     LOG(DEBUG) << "Start of event";
     // Container for all clusters, and detectors in tracking
     map<std::shared_ptr<Detector>, KDTree<Cluster>> trees;
-
+    std::shared_ptr<BentPixelDetector> bentPixelDetector, bent;
     std::shared_ptr<Detector> reference_first, reference_last;
     for(auto& detector : get_regular_detectors(!exclude_DUT_)) {
+
+        // bentPixelDetector = dynamic_cast<BentPixelDetector*>(detector.get());
+        bent = std::dynamic_pointer_cast<BentPixelDetector>(detector);
+        if(bent != nullptr) {
+            LOG(INFO) << "Success: The object is of type BentPixelDetector.";
+            bentPixelDetector = bent;
+        } else {
+            LOG(INFO) << "Failure: The object is not of type BentPixelDetector.";
+            auto detectorPtr = detector.get(); // Assuming this doesn't modify state
+            LOG(INFO) << "Actual type of the object is: " << typeid(detectorPtr).name();
+        }
         // Get the clusters
         auto tempClusters = clipboard->getData<Cluster>(detector->getName());
         LOG(DEBUG) << "Detector " << detector->getName() << " has " << tempClusters.size() << " clusters on the clipboard";
@@ -390,14 +401,20 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
     for(auto& clusterFirst : trees[reference_first].getAllElements()) {
         for(auto& clusterLast : trees[reference_last].getAllElements()) {
             LOG(DEBUG) << "Looking at next reference cluster pair";
-
             if(std::fabs(clusterFirst->timestamp() - clusterLast->timestamp()) > time_cut_ref) {
                 LOG(DEBUG) << "Reference clusters not within time cuts.";
                 continue;
             }
 
             // The track finding is based on a straight line. Therefore a refTrack to extrapolate to the next plane is used
+            // TODO: taking into account of bent detectors for the first iteration
             StraightLineTrack refTrack;
+
+            if(bentPixelDetector) {
+                refTrack = StraightLineTrack(bentPixelDetector);
+            } else {
+                refTrack = StraightLineTrack();
+            }
             refTrack.addCluster(clusterFirst.get());
             refTrack.addCluster(clusterLast.get());
             auto averageTimestamp = calculate_average_timestamp(&refTrack);
@@ -412,7 +429,12 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
                                    reference_last->toLocal());
 
             // Make a new track
-            auto track = Track::Factory(track_model_);
+            std::shared_ptr<Track> track;
+            if(bentPixelDetector) {
+                track = Track::Factory_b(track_model_, bentPixelDetector);
+            } else {
+                track = Track::Factory(track_model_);
+            }
             track->addCluster(clusterFirst.get());
             track->addCluster(clusterLast.get());
 
@@ -426,7 +448,6 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
 
             // Fit initial trajectory guess
             refTrack.fit();
-
             // Loop over each subsequent plane and look for a cluster within the timing cuts
             size_t detector_nr = 2;
             // Get all detectors here to also include passive layers which might contribute to scattering
@@ -437,6 +458,14 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
                 auto detectorID = detector->getName();
                 LOG(TRACE) << "Registering detector " << detectorID << " at z = " << detector->displacement().z();
 
+                /*    if(bentPixelDetector) {
+                        LOG(INFO) << "Init bent ptr";
+                    } else {
+                        LOG(INFO) << "Init bent empty";
+                    }*/
+                // if (detector->getName() == "ALPIDE_3") {
+                //	bentPixelDetector =  std::dynamic_pointer_cast<BentPixelDetector>(detector);
+                //}
                 // Add plane to track and trigger re-fit:
                 refTrack.updatePlane(
                     detectorID, detector->displacement().z(), detector->materialBudget(), detector->toLocal());
@@ -567,10 +596,8 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
                            << min_hits_on_track_ << " required.";
                 continue;
             }
-
             // Fit the track
             track->fit();
-
             if(reject_by_ROI_ && track->isFitted()) {
                 // check if the track is within ROI for all detectors
                 auto ds = get_regular_detectors(!exclude_DUT_);

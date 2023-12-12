@@ -32,6 +32,7 @@ namespace corryvreckan {
      * This class is a simple track class which knows how to fit itself. It holds a collection of clusters, which may or may
      * not be included in the track fit.
      */
+    class BentPixelDetector;
 
     class Track : public Object {
 
@@ -42,7 +43,8 @@ namespace corryvreckan {
          * @return By param trackModel assigned track model to be used
          */
         static std::shared_ptr<Track> Factory(const std::string& trackModel);
-
+        static std::shared_ptr<Track> Factory_b(const std::string& trackModel,
+                                                std::shared_ptr<BentPixelDetector> bentPixelDetector);
         /**
          * @brief Add a cluster to the tack, which will be used in the fit
          * @param cluster to be added

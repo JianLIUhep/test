@@ -304,6 +304,17 @@ std::shared_ptr<Track> corryvreckan::Track::Factory(const std::string& trackMode
     }
 }
 
+std::shared_ptr<Track> corryvreckan::Track::Factory_b(const std::string& trackModel,
+                                                      std::shared_ptr<BentPixelDetector> bentPixelDetector) {
+    if(trackModel == "straightline") {
+        return std::make_shared<StraightLineTrack>(bentPixelDetector);
+    } else if(trackModel == "gbl") {
+        return std::make_shared<GblTrack>();
+    } else {
+        throw UnknownTrackModel(typeid(Track), trackModel);
+    }
+}
+
 std::type_index Track::getBaseType() {
     return typeid(Track);
 }
