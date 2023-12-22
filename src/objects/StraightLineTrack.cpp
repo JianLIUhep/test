@@ -135,7 +135,7 @@ void StraightLineTrack::calculateChi2() {
             if(!bentPixelDetector_) {
                 LOG(INFO) << "empty ptr";
             }
-            intercept = bentPixelDetector_->getIntercept(this);
+            intercept = bentPixelDetector_->getLocalIntercept(this);
         }
         LOG(WARNING) << "chi2: intercept = " << intercept;
         LOG(INFO) << "chi2: get_m_state = " << get_m_state();
