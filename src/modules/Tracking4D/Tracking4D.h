@@ -15,6 +15,7 @@
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TH2F.h>
+#include <TH3F.h>
 #include <iostream>
 #include "core/module/Module.hpp"
 #include "objects/Cluster.hpp"
@@ -26,6 +27,8 @@ namespace corryvreckan {
      */
     class Tracking4D : public Module {
 
+        std::vector<ROOT::Math::XYZPoint> globalPositions;
+        std::vector<ROOT::Math::XYZPoint> localPositions;
     public:
         // Constructors and destructors
         Tracking4D(Configuration& config, std::vector<std::shared_ptr<Detector>> detectors);
@@ -36,6 +39,11 @@ namespace corryvreckan {
         StatusCode run(const std::shared_ptr<Clipboard>& clipboard) override;
 
     private:
+        TH3F* hGlobalPositions3D;
+        TH3F* hLocalPositions3D;
+        TH2F* hGlobalPositionsXY;
+        TH2F* hGlobalPositionsXZ;
+        TH2F* hGlobalPositionsYZ;
         // Histograms
         TH1F* trackChi2;
         TH1F* clustersPerTrack;

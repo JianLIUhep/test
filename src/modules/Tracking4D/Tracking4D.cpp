@@ -114,6 +114,12 @@ void Tracking4D::initialize() {
     trackTimeTriggerChi2 = new TH2F("trackTimeTriggerChi2", title.c_str(), 1000, -230.4, 230.4, 15, 0, 15);
     tracksVsTime = new TH1F("tracksVsTime", "Number of tracks vs. time; time [s]; # entries", 3e6, 0, 3e3);
 
+    hGlobalPositions3D = new TH3F("hGlobalPositions3D", "Global Cluster Positions;X;Y;Z", 200, -10, 8, 200, -10, 10, 200, -150, 150);
+    hLocalPositions3D = new TH3F("hLocalPositions3D", "Local Cluster Positions;X;Y;Z", 200, -10, 20, 200, -10, 10, 200, -10, 10);
+    hGlobalPositionsXY = new TH2F("hGlobalPositionsXY", "Global Cluster Positions XY;X;Y", 200, -15, 15, 200, -10, 10);
+    hGlobalPositionsXZ = new TH2F("hGlobalPositionsXZ", "Global Cluster Positions XZ;X;Z", 200, -17, 15, 200, -101, 140);
+    hGlobalPositionsYZ = new TH2F("hGlobalPositionsYZ", "Global Cluster Positions YZ;Y;Z", 200, -12, 10, 200, -101, 140);
+
     // Loop over all planes
     for(auto& detector : get_regular_detectors(true)) {
         auto detectorID = detector->getName();
@@ -324,8 +330,8 @@ void Tracking4D::initialize() {
         title = detectorID + " Pull Y;y-y_{track}/resolution;events";
         pullY_global[detectorID] = new TH1F("Globalpully", title.c_str(), 500, -5, 5);
 
-        residualsZ_global[detectorID] = new TH1F("GlobalResidualsz", title.c_str(), 500, -0.1, 0.1);
         title = detectorID + "global  Residual Z, cluster row width 1;z_{track}-z [mm];events";
+        residualsZ_global[detectorID] = new TH1F("GlobalResidualsz", title.c_str(), 500, -0.1, 0.1);
     }
 }
 
@@ -671,6 +677,17 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
         clipboard->putData(tracks);
     }
     for(auto track : tracks) {
+
+        for(auto& cluster : track->getClusters()) {
+            auto globalPos = cluster->global();
+            auto localPos = cluster->local();
+            hGlobalPositions3D->Fill(globalPos.X(), globalPos.Y(), globalPos.Z());
+            hLocalPositions3D->Fill(localPos.X(), localPos.Y(), localPos.Z());
+            hGlobalPositionsXY->Fill(globalPos.X(), globalPos.Y());
+            hGlobalPositionsXZ->Fill(globalPos.X(), globalPos.Z());
+            hGlobalPositionsYZ->Fill(globalPos.Y(), globalPos.Z());
+            }
+
         // Fill track time within event (relative to event start)
         auto event = clipboard->getEvent();
         trackTime->Fill(static_cast<double>(Units::convert(track->timestamp() - event->start(), "us")));
@@ -745,7 +762,9 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
 
         for(auto& detector : get_regular_detectors(true)) {
             auto det = detector->getName();
-
+            if(bentPixelDetector) {
+            LOG(WARNING) << "!!!!!!!!!!!!!!!!! bent detector before getting local intercept !!!!!!!!!!!!!!!!";
+            }
             auto local = detector->getLocalIntercept(track.get());
             auto row = detector->getRow(local);
             auto col = detector->getColumn(local);
@@ -772,5 +791,8 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
     tracksPerEvent->Fill(static_cast<double>(tracks.size()));
 
     LOG(DEBUG) << "End of event";
+
+
+
     return StatusCode::Success;
 }
