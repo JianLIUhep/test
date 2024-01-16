@@ -762,9 +762,6 @@ StatusCode Tracking4D::run(const std::shared_ptr<Clipboard>& clipboard) {
 
         for(auto& detector : get_regular_detectors(true)) {
             auto det = detector->getName();
-            if(bentPixelDetector) {
-            LOG(WARNING) << "!!!!!!!!!!!!!!!!! bent detector before getting local intercept !!!!!!!!!!!!!!!!";
-            }
             auto local = detector->getLocalIntercept(track.get());
             auto row = detector->getRow(local);
             auto col = detector->getColumn(local);

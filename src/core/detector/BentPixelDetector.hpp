@@ -62,6 +62,8 @@ namespace corryvreckan {
 
         double getColumn(PositionVector3D<Cartesian3D<double>> localPosition) const override;
 
+        double getRow(PositionVector3D<Cartesian3D<double>> localPosition) const override;
+
         // Function to get global intercept with a track
         PositionVector3D<Cartesian3D<double>> getIntercept(const Track* track) const override;
 

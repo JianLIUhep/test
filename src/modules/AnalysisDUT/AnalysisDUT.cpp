@@ -262,8 +262,8 @@ void AnalysisDUT::initialize() {
     hTrackZPosDUT = new TH1F("globalTrackZPosOnDUT",
                              "Global z-position of track on the DUT; global z of track intersection [mm]; # entries ",
                              400,
-                             m_detector->displacement().z() - 10,
-                             m_detector->displacement().z() + 10);
+                             m_detector->displacement().z() - 30,
+                             m_detector->displacement().z() + 30);
     // Per-pixel histograms
     hHitMapAssoc = new TH2F("hitMapAssoc",
                             "Hit map of pixels from associated clusters; hit column; hit row",

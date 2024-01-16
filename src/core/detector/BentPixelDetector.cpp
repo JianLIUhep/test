@@ -71,9 +71,14 @@ void BentPixelDetector::configure_pos_and_orientation(Configuration& config) con
 //     return local_transformed;
 // }
 
-// for getRow the second component from a RhoZPhi vector is used, so it would be the same function
 double BentPixelDetector::getColumn(const PositionVector3D<Cartesian3D<double>> localPosition) const {
-    return localPosition.Z() * (-m_radius) / m_pitch.X() + static_cast<double>(m_nPixels.X() - 1) / 2.;
+    // double rho = sqrt(localPosition.X()*localPosition.X() + localPosition.Y()*localPosition.Y());
+    double phi = atan2(localPosition.Y(),localPosition.X());
+    return (-phi * m_radius / m_pitch.X()) + static_cast<double>(m_nPixels.X() - 1) / 2.;
+}
+
+double BentPixelDetector::getRow(const PositionVector3D<Cartesian3D<double>> localPosition) const {
+    return (localPosition.Z() / m_pitch.Y()) + (m_nPixels.Y() - 1) / 2.;
 }
 
 // XYZPoint BentPixelDetector::globalToLocal(XYZPoint global) const {
